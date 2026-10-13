@@ -22,6 +22,7 @@ window.DEMO_CONFIG = {
   brand: {
     name: 'Luisito el Viajero',
     whatsappNumber: '', // Configurar el número comercial con indicativo de país, sin + ni espacios (ej. 573001234567).
+    pageSize: 9, // cabañas por página en el catálogo; cargar de a pocas mantiene la web ligera.
     leadsEndpoint: '', // Opcional: URL (https) que recibe cada solicitud como JSON por POST. Ver README.
     leadEmail: '', // Opcional: correo para ofrecer «Enviar por correo» si no hay WhatsApp.
     siteUrl: '', // Dominio público final (https://...). Se usa para datos estructurados y metadatos al lanzar.

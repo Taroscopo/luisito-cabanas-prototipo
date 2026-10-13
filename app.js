@@ -16,6 +16,8 @@
   const fabLabel = $('#waLabel');
   let activeLocation = 'all';
   let showFavorites = false;
+  let page = 1;
+  const PAGE_SIZE = Math.max(1, Number(CONFIG.brand.pageSize) || 9); // el catálogo se muestra de a 9 para que cargue ligero
   let activeProperty = null;
   let activeMode = 'alojamiento';
   let currentEstimate = null;
@@ -153,20 +155,41 @@
     }
   }
 
-  function renderCards(location = activeLocation) {
+  function renderCards(location = activeLocation, targetPage = 1) {
     activeLocation = location;
     const visible = CONFIG.properties.filter(property => (location === 'all' || cityOf(property) === location) && (!showFavorites || favorites.has(property.id)));
-    setHtml(propertyGrid, visible.length
-      ? html`${visible.map(propertyCardTemplate)}`
+    const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+    page = Math.min(Math.max(1, targetPage), pages);
+    const shown = visible.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    setHtml(propertyGrid, shown.length
+      ? html`${shown.map(propertyCardTemplate)}`
       : showFavorites
         ? html`<div class="empty-state"><strong>Aún no tienes favoritas${location === 'all' ? '' : ' en esta ubicación'}</strong><span>Toca el corazón de una cabaña para guardarla aquí y compararla con calma.</span><button type="button" class="button button-outline" data-action="show-all">Ver todas las cabañas</button></div>`
         : html`<div class="empty-state"><strong>No hay opciones en esta ubicación</strong><button type="button" class="button button-outline" data-location="all">Ver todas las ubicaciones</button></div>`);
+    renderPager(visible.length, pages);
     $('#locLabel').textContent = location === 'all' ? 'Ubicación' : location;
     locationButton.classList.toggle('is-filtered', location !== 'all');
     $('#resultCount').textContent = showFavorites ? plural(visible.length, 'favorita', 'favoritas') : plural(visible.length, 'opción', 'opciones');
     renderLocationMenu();
     syncFavorites();
     observeReveals();
+  }
+
+  /** Paginador del catálogo: «Anterior · 1 2 3 · Siguiente» (en móvil, «Página 2 de 3»). */
+  function renderPager(total, pages) {
+    const pager = $('#pager');
+    pager.hidden = pages <= 1;
+    if (pages <= 1) { pager.innerHTML = ''; return; }
+    const from = (page - 1) * PAGE_SIZE + 1;
+    const to = Math.min(total, page * PAGE_SIZE);
+    const numbers = Array.from({ length: pages }, (_, i) => i + 1).map(n => html`<button type="button" class="pager-number" data-page="${n}" aria-label="Página ${n}"${n === page ? html` aria-current="page"` : ''}>${n}</button>`);
+    setHtml(pager, html`<p class="pager-info" aria-live="polite">Mostrando ${from}–${to} de ${total}</p>
+      <div class="pager-controls">
+        <button type="button" class="pager-step" data-page="${page - 1}"${page === 1 ? ' disabled' : ''}>${icon('caret-left')}<span>Anterior</span></button>
+        <div class="pager-numbers">${numbers}</div>
+        <span class="pager-status">Página ${page} de ${pages}</span>
+        <button type="button" class="pager-step" data-page="${page + 1}"${page === pages ? ' disabled' : ''}><span>Siguiente</span>${icon('caret-right')}</button>
+      </div>`);
   }
 
   /** Estado visible de los favoritos: contador, botón de la barra y botón flotante. */
@@ -212,9 +235,63 @@
   /** Pantalla vertical (9:16): el reel de la propiedad o, mientras no exista, un marcador con su foto principal. */
   function reelTemplate(property) {
     if (property.videoUrl) {
-      return html`<video id="modalMainVideo" autoplay muted playsinline loop controls poster="${property.gallery[0]}" aria-label="Reel de ${property.name}"><source src="${property.videoUrl}" type="video/mp4" /></video>`;
+      return html`<video id="modalMainVideo" data-action="reel-toggle" playsinline loop preload="auto" poster="${property.gallery[0]}" aria-label="Reel de ${property.name}. Toca para pausar o reanudar."><source src="${property.videoUrl}" type="video/mp4" /></video>
+        <div class="reel-controls">
+          <button type="button" class="reel-btn reel-toggle" data-action="reel-toggle" aria-label="Pausar el reel"><span class="i-pause">${icon('pause')}</span><span class="i-play">${icon('play')}</span></button>
+          <button type="button" class="reel-btn reel-sound" data-action="reel-sound" aria-label="Activar el sonido" aria-pressed="false"><span class="i-on">${icon('volume')}</span><span class="i-off">${icon('volume-off')}</span><span class="reel-sound-hint">Activar sonido</span></button>
+        </div>
+        <span class="reel-progress" aria-hidden="true"><i></i></span>`;
     }
     return html`<img id="modalMainImage" src="${property.gallery[0]}" alt="${property.name}, vista previa del reel" /><span class="reel-badge">Reel · demo</span>`;
+  }
+
+  /* Reel con sonido: se arranca dentro del clic que abrió la ficha, que es lo que permiten los navegadores.
+     Si aun así el navegador lo bloquea, se reproduce en silencio y se invita a activar el sonido con un toque. */
+  let reelSound = true; // preferencia de la persona durante la visita
+  const reelVideo = () => $('#modalStage video', propertyModal);
+  function syncReelUi(stage, video) {
+    stage.classList.toggle('is-muted', video.muted);
+    stage.classList.toggle('is-paused', video.paused);
+    const sound = $('.reel-sound', stage);
+    const toggle = $('.reel-toggle', stage);
+    if (sound) { sound.setAttribute('aria-pressed', String(!video.muted)); sound.setAttribute('aria-label', video.muted ? 'Activar el sonido' : 'Silenciar el reel'); }
+    if (toggle) toggle.setAttribute('aria-label', video.paused ? 'Reproducir el reel' : 'Pausar el reel');
+  }
+  function startReel() {
+    const stage = $('#modalStage', propertyModal);
+    const video = stage && $('video', stage);
+    if (!video) return;
+    video.muted = !reelSound;
+    stage.classList.remove('needs-sound');
+    ['play', 'pause', 'volumechange'].forEach(type => video.addEventListener(type, () => syncReelUi(stage, video)));
+    video.addEventListener('timeupdate', () => { if (video.duration) stage.style.setProperty('--p', String(video.currentTime / video.duration)); });
+    syncReelUi(stage, video);
+    const attempt = video.play();
+    if (attempt && attempt.catch) {
+      attempt.catch(() => {
+        video.muted = true; // el navegador exige un gesto para el sonido: se arranca en silencio
+        syncReelUi(stage, video);
+        if (reelSound) stage.classList.add('needs-sound');
+        const retry = video.play();
+        if (retry && retry.catch) retry.catch(() => {});
+      });
+    }
+  }
+  const pauseReels = () => $$('video', document).forEach(video => video.pause());
+  document.addEventListener('visibilitychange', () => { if (document.hidden) pauseReels(); });
+
+  /* Altura real visible (descuenta el teclado en el móvil) para que el chat y su campo de texto no queden tapados. */
+  if (window.visualViewport) {
+    const syncViewport = () => {
+      const root = document.documentElement.style;
+      root.setProperty('--vvh', `${Math.round(window.visualViewport.height)}px`);
+      root.setProperty('--vvt', `${Math.round(window.visualViewport.offsetTop)}px`);
+      const body = $('#chatBody');
+      if (body && contactModal.classList.contains('is-open')) body.scrollTop = body.scrollHeight;
+    };
+    window.visualViewport.addEventListener('resize', syncViewport);
+    window.visualViewport.addEventListener('scroll', syncViewport);
+    syncViewport();
   }
 
   function galleryStripTemplate(property) {
@@ -240,7 +317,7 @@
     currentEstimate = null;
     const price = modalPrice(property, activeMode);
     setHtml(propertyModal, html`<section class="modal-panel property-panel" role="dialog" aria-modal="true" aria-labelledby="propertyModalTitle">
-      <button class="modal-close" data-action="close-modal" aria-label="Cerrar ficha">${icon('x')}</button>
+      <div class="pm-topbar"><span class="pm-topbar-title">${property.name}</span><button class="modal-close" data-action="close-modal" aria-label="Cerrar ficha">${icon('x')}</button></div>
       <div class="pm-grid">
         <div class="pm-media">
           <div class="pm-stage" id="modalStage">${reelTemplate(property)}</div>
@@ -261,6 +338,7 @@
       </div>
     </section>`);
     openModal(propertyModal);
+    startReel();
     refreshCalculation();
   }
 
@@ -398,6 +476,7 @@
   /* ---------- Modales ---------- */
   function openModal(modal) {
     restoreFocusTo.set(modal, document.activeElement);
+    if (modal === contactModal) pauseReels(); // el chat se abre sobre la ficha: que no siga sonando detrás
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
@@ -409,6 +488,7 @@
     if (!modal || !modal.classList.contains('is-open')) return;
     modal.classList.remove('is-open');
     modal.setAttribute('aria-hidden', 'true');
+    $$('video', modal).forEach(video => video.pause());
     if (modal !== contactModal) modal.innerHTML = ''; // el chat se conserva para retomarlo
     if (![propertyModal, contactModal].some(item => item.classList.contains('is-open'))) document.body.classList.remove('modal-open');
     const back = restoreFocusTo.get(modal);
@@ -1063,7 +1143,7 @@
       if (saved) favorites.add(id); else favorites.delete(id);
       persistFavorites();
       const name = CONFIG.properties.find(property => property.id === id)?.name || 'La propiedad';
-      if (showFavorites && !saved) renderCards();
+      if (showFavorites && !saved) renderCards(activeLocation, page);
       else {
         el.setAttribute('aria-pressed', String(saved));
         el.classList.toggle('is-saved', saved);
@@ -1128,6 +1208,21 @@
       input.value = String(Math.max(Number(input.min), Math.min(Number(input.max), Number(input.value) + Number(el.dataset.step))));
       refreshCalculation();
     },
+    'reel-toggle': () => {
+      const video = reelVideo();
+      if (!video) return;
+      if (video.paused) { const p = video.play(); if (p && p.catch) p.catch(() => {}); } else video.pause();
+      syncReelUi($('#modalStage', propertyModal), video);
+    },
+    'reel-sound': () => {
+      const video = reelVideo();
+      if (!video) return;
+      video.muted = !video.muted;
+      reelSound = !video.muted;
+      $('#modalStage', propertyModal).classList.remove('needs-sound');
+      syncReelUi($('#modalStage', propertyModal), video);
+      if (video.paused) { const p = video.play(); if (p && p.catch) p.catch(() => {}); }
+    },
     gallery: el => {
       const prop = activeProperty;
       const stage = $('#modalStage', propertyModal);
@@ -1135,6 +1230,8 @@
       const index = Number(el.dataset.index);
       stage.classList.toggle('is-photo', index >= 0);
       setHtml(stage, index < 0 ? reelTemplate(prop) : html`<img id="modalMainImage" src="${prop.gallery[index]}" alt="Foto ${index + 1} de ${prop.name}" />`);
+      stage.classList.remove('is-muted', 'is-paused', 'needs-sound');
+      if (index < 0) startReel();
       $$('.gallery-thumb', propertyModal).forEach(btn => btn.classList.toggle('is-selected', btn === el));
     },
     'request-quote': () => {
@@ -1162,6 +1259,12 @@
       return;
     }
     if (locationMenu.classList.contains('is-open') && !event.target.closest('#locFilter')) setLocationMenu(false);
+    const pageButton = event.target.closest('[data-page]');
+    if (pageButton && !pageButton.disabled) {
+      renderCards(activeLocation, Number(pageButton.dataset.page));
+      $('.catalog-toolbar').scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth', block: 'start' });
+      return;
+    }
     const openProp = event.target.closest('[data-open-property]');
     if (openProp) {
       const prop = CONFIG.properties.find(p => p.id === openProp.dataset.openProperty);

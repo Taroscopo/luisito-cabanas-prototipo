@@ -68,7 +68,8 @@
 
     await test('la página carga sin errores y muestra una tarjeta por propiedad', () => {
       assert(config.properties.length >= 19, 'se esperaban todas las cabañas cargadas');
-      assert($$('.property-card').length === config.properties.length, `se esperaban ${config.properties.length} tarjetas y hay ${$$('.property-card').length}`);
+      const firstPage = Math.min(9, config.properties.length);
+      assert($$('.property-card').length === firstPage, `se esperaban ${firstPage} tarjetas en la primera página y hay ${$$('.property-card').length}`);
       assert(win.DemoPricing && typeof win.DemoPricing.calculateQuote === 'function', 'falta DemoPricing');
     });
 
@@ -163,11 +164,84 @@
       }
     });
 
+    await test('reel: sin controles nativos, botón propio de sonido y pausa, y la X de cerrar fuera del video en móvil', async () => {
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(120);
+      const video = $('#modalStage video');
+      assert(!video.hasAttribute('controls'), 'sin controles nativos que choquen con la X');
+      assert($('.reel-sound') && $('.reel-toggle') && $('.reel-progress'), 'botones propios de sonido y pausa, y barra de progreso');
+      assert(video.hasAttribute('playsinline') && video.hasAttribute('loop'), 'playsinline y loop');
+      const sound = $('.reel-sound');
+      const before = video.muted;
+      sound.click();
+      assert(video.muted !== before, 'el botón cambia el sonido');
+      assert(sound.getAttribute('aria-pressed') === String(!video.muted), 'aria-pressed refleja el sonido');
+      assert(!$('#modalStage').classList.contains('needs-sound'), 'al tocar el sonido desaparece el aviso');
+      await closeAll();
+      const mobile = await loadApp(390 + 15); // +15 px: barra de desplazamiento clásica del iframe de prueba
+      const mdoc = mobile.contentDocument;
+      mdoc.querySelector('[data-open-property="casa-karkinos"]').click();
+      await sleep(200);
+      const rect = sel => mdoc.querySelector(sel).getBoundingClientRect();
+      const stage = rect('#modalStage'), close = rect('.modal-close'), snd = rect('.reel-sound');
+      assert(close.bottom <= stage.top + 1, `la X (hasta ${Math.round(close.bottom)}) debe quedar sobre el reel (desde ${Math.round(stage.top)})`);
+      assert(snd.bottom <= stage.bottom + 1 && snd.right <= stage.right + 1 && snd.top > close.bottom, 'el botón de sonido queda dentro del reel y libre');
+      const ratio = stage.height / stage.width;
+      assert(ratio >= 1.5 && ratio <= 1.8, `el reel debe ser alargado pero no tanto como la pantalla, proporción ${ratio.toFixed(2)}`);
+      mobile.remove();
+    });
+
+    await test('ficha en tableta (768 y 900 px): una columna, fechas completas y nada cortado ni fuera de la pantalla', async () => {
+      for (const width of [768, 900]) {
+        const tablet = await loadApp(width + 15); // +15 px: barra de desplazamiento clásica del iframe de prueba
+        const tdoc = tablet.contentDocument;
+        await tdoc.fonts.ready;
+        tdoc.querySelector('[data-open-property="casa-karkinos"]').click();
+        await sleep(250);
+        const hint = `a ${width} px`;
+        const calc = tdoc.querySelector('.calculator').getBoundingClientRect();
+        assert(calc.width >= 450, `${hint}: el cotizador queda estrecho (${Math.round(calc.width)} px)`);
+        for (const input of tdoc.querySelectorAll('#calc-date, #calc-departure')) {
+          assert(input.scrollWidth <= input.clientWidth + 1, `${hint}: la fecha de ${input.id} se corta (${input.scrollWidth} > ${input.clientWidth})`);
+        }
+        const price = tdoc.querySelector('#modalPriceValue');
+        assert(price.getBoundingClientRect().height < 60, `${hint}: el precio se parte en varias líneas`);
+        const media = tdoc.querySelector('.pm-media').getBoundingClientRect(), info = tdoc.querySelector('.pm-info').getBoundingClientRect();
+        assert(info.top >= media.bottom - 1, `${hint}: reel y datos deben ir en columna, no lado a lado`);
+        const panel = tdoc.querySelector('#propertyModal .modal-panel');
+        assert(panel.scrollWidth <= panel.clientWidth + 1, `${hint}: la ficha desborda en horizontal`);
+        tablet.remove();
+      }
+    });
+
     await test('los metadatos de SEO y el favicon están presentes', () => {
       assert($('meta[property="og:title"]'), 'og:title');
       assert($('meta[name="twitter:card"]'), 'twitter:card');
       assert($('link[rel="icon"]'), 'favicon');
       assert(!$('script[type="application/ld+json"]'), 'en modo demo no debe haber datos estructurados de propiedades ficticias');
+    });
+
+    await test('el catálogo se pagina de 9 en 9: siguiente, anterior, números y vuelta a la primera página al filtrar', async () => {
+      const total = config.properties.length;
+      const pages = Math.ceil(total / 9);
+      assert(pages >= 2, 'para probar la paginación hacen falta más de 9 cabañas');
+      assert($$('.property-card').length === 9 && !$('#pager').hidden, 'la primera página muestra 9 y el paginador');
+      assert($('.pager-info').textContent.includes(`1–9 de ${total}`), 'info: ' + $('.pager-info').textContent);
+      assert($('.pager-step[disabled]') && $('.pager-step[disabled]').textContent.includes('Anterior'), 'en la primera página «Anterior» está desactivado');
+      const firstNames = $$('.card-title').map(e => e.textContent).join('|');
+      $$('.pager-step').pop().click();
+      const secondNames = $$('.card-title').map(e => e.textContent).join('|');
+      assert(secondNames !== firstNames && $$('.property-card').length === Math.min(9, total - 9), 'la página 2 muestra las siguientes');
+      assert($('.pager-number[aria-current="page"]').textContent === '2', 'la página activa es la 2');
+      $('.pager-number[data-page="1"]').click();
+      assert($$('.card-title').map(e => e.textContent).join('|') === firstNames, 'el número 1 vuelve a la primera página');
+      $$('.pager-step').pop().click();
+      $('#locButton').click();
+      $('[data-location="Sabanagrande"]').click();
+      assert($('#pager').hidden && $$('.property-card').length > 0, 'con pocos resultados no hay paginador y se vuelve a la página 1');
+      $('#locButton').click();
+      $('[data-location="all"]').click();
+      assert($('.pager-number[aria-current="page"]').textContent === '1', 'al quitar el filtro se empieza en la página 1');
     });
 
     await test('el filtro de ubicación muestra y restaura tarjetas', async () => {
@@ -187,7 +261,7 @@
       assert(button.getAttribute('aria-expanded') === 'false', 'Escape debía cerrar el menú');
       button.click();
       $('[data-location="all"]').click();
-      assert($$('.property-card').length === config.properties.length, 'todas → todas las tarjetas');
+      assert($$('.property-card').length === Math.min(9, config.properties.length), 'todas → primera página de tarjetas');
     });
 
     await test('la tarjeta muestra «Desde» + el precio y debajo para cuántas personas, sin «por persona»', () => {
@@ -235,7 +309,7 @@
       hearts()[0].click();
       assert($$('.property-card').length === 0 && $('.empty-state'), 'sin favoritos se explica cómo guardar');
       $('[data-action="show-all"]').click();
-      assert($$('.property-card').length === config.properties.length && $('#favToggle').getAttribute('aria-pressed') === 'false', 'ver todas vuelve al catálogo');
+      assert($$('.property-card').length === Math.min(9, config.properties.length) && $('#favToggle').getAttribute('aria-pressed') === 'false', 'ver todas vuelve al catálogo');
       assert($('#favCount').hidden, 'el contador se oculta al quedar en cero');
     });
 
@@ -411,7 +485,8 @@
 
     await test('todas las propiedades piden Llegada y Salida, sin la palabra «opcional»', async () => {
       for (const property of config.properties) {
-        $(`[data-open-property="${property.id}"]`).click();
+        const opener = doc.createElement('button'); // la tarjeta puede estar en otra página del catálogo
+        opener.dataset.openProperty = property.id; doc.body.appendChild(opener); opener.click(); opener.remove();
         await sleep(30);
         assert($('label[for="calc-date"]').textContent === 'Llegada', property.name + ': falta «Llegada»');
         assert($('label[for="calc-departure"]').textContent === 'Salida', property.name + ': falta «Salida» o dice ' + ($('label[for="calc-departure"]') || {}).textContent);
