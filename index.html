@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="es-CO">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#171a18" />
+  <meta name="description" content="Descubre cabañas, pasadías y espacios para eventos en la costa Caribe colombiana, seleccionados por Luisito el Viajero." />
+  <title>Luisito el Viajero — Cabañas, pasadías y experiencias</title>
+  <!-- MODO DEMO: contenido ficticio. Quitar esta línea y actualizar robots.txt al lanzar (ver LANZAMIENTO.md). -->
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preload" href="assets/hero-cabanas.webp" as="image" type="image/webp" media="(min-width: 821px)" />
+  <link rel="preload" href="assets/hero-cabanas-mobile.webp" as="image" type="image/webp" media="(max-width: 820px)" />
+  <link rel="preload" href="assets/logo.webp" as="image" type="image/webp" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="es_CO" />
+  <meta property="og:site_name" content="Luisito el Viajero" />
+  <meta property="og:title" content="Luisito el Viajero — Cabañas, pasadías y experiencias" />
+  <meta property="og:description" content="Cabañas, pasadías y espacios para eventos en la costa Caribe colombiana, seleccionados por Luisito el Viajero." />
+  <meta property="og:image" content="assets/hero-cabanas.webp" />
+  <meta property="og:image:alt" content="Luisito con los brazos abiertos sobre una red, frente a las montañas, visto desde una piscina bajo un arco de roca" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Luisito el Viajero — Cabañas, pasadías y experiencias" />
+  <meta name="twitter:description" content="Cabañas, pasadías y espacios para eventos en la costa Caribe colombiana." />
+  <meta name="twitter:image" content="assets/hero-cabanas.webp" />
+  <link rel="preload" href="assets/fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/cormorant-garamond-italic-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Iconos: Phosphor Icons (MIT), variante regular, en un solo sprite que usan el HTML y app.js mediante <use>. -->
+  <svg class="icon-sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-pin" viewBox="0 0 256 256"><path d="M128 64a40 40 0 1 0 40 40a40 40 0 0 0-40-40m0 64a24 24 0 1 1 24-24a24 24 0 0 1-24 24m0-112a88.1 88.1 0 0 0-88 88c0 31.4 14.51 64.68 42 96.25a254.2 254.2 0 0 0 41.45 38.3a8 8 0 0 0 9.18 0a254.2 254.2 0 0 0 41.37-38.3c27.45-31.57 42-64.85 42-96.25a88.1 88.1 0 0 0-88-88m0 206c-16.53-13-72-60.75-72-118a72 72 0 0 1 144 0c0 57.23-55.47 105-72 118"/></symbol>
+    <symbol id="i-users" viewBox="0 0 256 256"><path d="M117.25 157.92a60 60 0 1 0-66.5 0a95.83 95.83 0 0 0-47.22 37.71a8 8 0 1 0 13.4 8.74a80 80 0 0 1 134.14 0a8 8 0 0 0 13.4-8.74a95.83 95.83 0 0 0-47.22-37.71M40 108a44 44 0 1 1 44 44a44.05 44.05 0 0 1-44-44m210.14 98.7a8 8 0 0 1-11.07-2.33A79.83 79.83 0 0 0 172 168a8 8 0 0 1 0-16a44 44 0 1 0-16.34-84.87a8 8 0 1 1-5.94-14.85a60 60 0 0 1 55.53 105.64a95.83 95.83 0 0 1 47.22 37.71a8 8 0 0 1-2.33 11.07"/></symbol>
+    <symbol id="i-bed" viewBox="0 0 256 256"><path d="M216 72H32V48a8 8 0 0 0-16 0v160a8 8 0 0 0 16 0v-32h208v32a8 8 0 0 0 16 0v-96a40 40 0 0 0-40-40M32 88h72v72H32Zm88 72V88h96a24 24 0 0 1 24 24v48Z"/></symbol>
+    <symbol id="i-pool" viewBox="0 0 256 256"><path d="M88 149.39a8 8 0 0 0 8-8V128h64v15.29a8 8 0 0 0 16 0V32a8 8 0 0 0-16 0v16H96V32a8 8 0 0 0-16 0v109.39a8 8 0 0 0 8 8M96 112V96h64v16Zm64-48v16H96V64ZM24 168a8 8 0 0 1 8-8c14.42 0 22.19 5.18 28.44 9.34C66 173.06 70.42 176 80 176s14-2.94 19.56-6.66c6.24-4.16 14-9.34 28.43-9.34s22.2 5.18 28.44 9.34c5.58 3.72 10 6.66 19.57 6.66s14-2.94 19.56-6.66c6.25-4.16 14-9.34 28.44-9.34a8 8 0 0 1 0 16c-9.58 0-14 2.94-19.56 6.66c-6.25 4.16-14 9.34-28.44 9.34s-22.2-5.18-28.44-9.34C142 178.94 137.57 176 128 176s-14 2.94-19.56 6.66c-6.24 4.16-14 9.34-28.43 9.34s-22.19-5.18-28.44-9.34C46 178.94 41.58 176 32 176a8 8 0 0 1-8-8m208 40a8 8 0 0 1-8 8c-9.58 0-14 2.94-19.56 6.66c-6.25 4.16-14 9.34-28.44 9.34s-22.2-5.18-28.44-9.34C142 218.94 137.57 216 128 216s-14 2.94-19.56 6.66c-6.24 4.16-14 9.34-28.43 9.34s-22.19-5.18-28.44-9.34C46 218.94 41.58 216 32 216a8 8 0 0 1 0-16c14.42 0 22.19 5.18 28.44 9.34C66 213.06 70.42 216 80 216s14-2.94 19.56-6.66c6.24-4.16 14-9.34 28.43-9.34s22.2 5.18 28.44 9.34c5.58 3.72 10 6.66 19.57 6.66s14-2.94 19.56-6.66c6.25-4.16 14-9.34 28.44-9.34a8 8 0 0 1 8 8"/></symbol>
+    <symbol id="i-waves" viewBox="0 0 256 256"><path d="M222.16 177.25a8 8 0 0 1-1 11.25c-17.36 14.39-32.86 19.5-47 19.5c-18.58 0-34.82-8.82-49.93-17c-25.35-13.76-47.24-25.64-79.07.74a8 8 0 1 1-10.22-12.31c40.17-33.28 70.32-16.92 96.93-2.48c25.35 13.75 47.24 25.63 79.07-.74a8 8 0 0 1 11.22 1.04m-11.27-57c-31.83 26.38-53.72 14.5-79.07.74c-26.61-14.43-56.76-30.79-96.93 2.49a8 8 0 0 0 10.22 12.31c31.83-26.38 53.72-14.5 79.07-.74c15.11 8.19 31.35 17 49.93 17c14.14 0 29.64-5.11 47-19.5a8 8 0 1 0-10.22-12.31ZM45.11 79.8c31.83-26.37 53.72-14.49 79.07-.74c15.11 8.2 31.35 17 49.93 17c14.14 0 29.64-5.12 47-19.5a8 8 0 1 0-10.22-12.31c-31.83 26.38-53.72 14.5-79.07.74c-26.61-14.41-56.76-30.77-96.93 2.51a8 8 0 1 0 10.22 12.3"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 256 256"><path d="M208 32h-24v-8a8 8 0 0 0-16 0v8H88v-8a8 8 0 0 0-16 0v8H48a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16M72 48v8a8 8 0 0 0 16 0v-8h80v8a8 8 0 0 0 16 0v-8h24v32H48V48Zm136 160H48V96h160z"/></symbol>
+    <symbol id="i-arrow-up-right" viewBox="0 0 256 256"><path d="M200 64v104a8 8 0 0 1-16 0V83.31L69.66 197.66a8 8 0 0 1-11.32-11.32L172.69 72H88a8 8 0 0 1 0-16h104a8 8 0 0 1 8 8"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 256 256"><path d="M205.66 117.66a8 8 0 0 1-11.32 0L136 59.31V216a8 8 0 0 1-16 0V59.31l-58.34 58.35a8 8 0 0 1-11.32-11.32l72-72a8 8 0 0 1 11.32 0l72 72a8 8 0 0 1 0 11.32"/></symbol>
+    <symbol id="i-arrow-down" viewBox="0 0 256 256"><path d="m205.66 149.66l-72 72a8 8 0 0 1-11.32 0l-72-72a8 8 0 0 1 11.32-11.32L120 196.69V40a8 8 0 0 1 16 0v156.69l58.34-58.35a8 8 0 0 1 11.32 11.32"/></symbol>
+    <symbol id="i-check" viewBox="0 0 256 256"><path d="m229.66 77.66l-128 128a8 8 0 0 1-11.32 0l-56-56a8 8 0 0 1 11.32-11.32L96 188.69L218.34 66.34a8 8 0 0 1 11.32 11.32"/></symbol>
+    <symbol id="i-trees" viewBox="0 0 256 256"><path d="M198.1 62.59a76 76 0 0 0-140.2 0A71.71 71.71 0 0 0 16 127.8C15.9 166 48 199 86.14 200a72.1 72.1 0 0 0 33.86-7.53V232a8 8 0 0 0 16 0v-39.53a72.2 72.2 0 0 0 32 7.53h1.82c38.18-1 70.29-34 70.18-72.2a71.71 71.71 0 0 0-41.9-65.21M169.45 184A56.08 56.08 0 0 1 136 174v-41l43.58-21.78a8 8 0 1 0-7.16-14.32L136 115.06V88a8 8 0 0 0-16 0v51.06l-36.42-18.22a8 8 0 1 0-7.16 14.32L120 156.94v17a56 56 0 0 1-33.45 10c-29.65-.71-54.63-26.42-54.55-56.1A55.77 55.77 0 0 1 67.11 76a8 8 0 0 0 4.53-4.67a60 60 0 0 1 112.72 0a8 8 0 0 0 4.53 4.67A55.79 55.79 0 0 1 224 127.84c.08 29.68-24.9 55.39-54.55 56.16"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 256 256"><path d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m0 192a88 88 0 1 1 88-88a88.1 88.1 0 0 1-88 88m64-88a8 8 0 0 1-8 8h-56a8 8 0 0 1-8-8V72a8 8 0 0 1 16 0v48h48a8 8 0 0 1 8 8"/></symbol>
+    <symbol id="i-x" viewBox="0 0 256 256"><path d="M205.66 194.34a8 8 0 0 1-11.32 11.32L128 139.31l-66.34 66.35a8 8 0 0 1-11.32-11.32L116.69 128L50.34 61.66a8 8 0 0 1 11.32-11.32L128 116.69l66.34-66.35a8 8 0 0 1 11.32 11.32L139.31 128Z"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 256 256"><path d="M178 40c-20.65 0-38.73 8.88-50 23.89C116.73 48.88 98.65 40 78 40a62.07 62.07 0 0 0-62 62c0 70 103.79 126.66 108.21 129a8 8 0 0 0 7.58 0C136.21 228.66 240 172 240 102a62.07 62.07 0 0 0-62-62m-50 174.8c-18.26-10.64-96-59.11-96-112.8a46.06 46.06 0 0 1 46-46c19.45 0 35.78 10.36 42.6 27a8 8 0 0 0 14.8 0c6.82-16.67 23.15-27 42.6-27a46.06 46.06 0 0 1 46 46c0 53.61-77.76 102.15-96 112.8"/></symbol>
+    <symbol id="i-heart-fill" viewBox="0 0 256 256"><path d="M240 102c0 70-103.79 126.66-108.21 129a8 8 0 0 1-7.58 0C119.79 228.66 16 172 16 102a62.07 62.07 0 0 1 62-62c20.65 0 38.73 8.88 50 23.89C139.27 48.88 157.35 40 178 40a62.07 62.07 0 0 1 62 62"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 256 256"><path d="M224 128a8 8 0 0 1-8 8h-80v80a8 8 0 0 1-16 0v-80H40a8 8 0 0 1 0-16h80V40a8 8 0 0 1 16 0v80h80a8 8 0 0 1 8 8"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 256 256"><path d="M224 128a8 8 0 0 1-8 8H40a8 8 0 0 1 0-16h176a8 8 0 0 1 8 8"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 256 256"><path d="m213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80a8 8 0 0 1 11.32-11.32L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32"/></symbol>
+    <symbol id="i-play" viewBox="0 0 256 256"><path d="M240 128a15.74 15.74 0 0 1-7.6 13.51L88.32 229.65a16 16 0 0 1-16.2.3A15.86 15.86 0 0 1 64 216.13V39.87a15.86 15.86 0 0 1 8.12-13.82a16 16 0 0 1 16.2.3l144.08 88.14A15.74 15.74 0 0 1 240 128"/></symbol>
+    <symbol id="i-car" viewBox="0 0 256 256"><path d="M240 104h-10.8l-27.78-62.5A16 16 0 0 0 186.8 32H69.2a16 16 0 0 0-14.62 9.5L26.8 104H16a8 8 0 0 0 0 16h8v80a16 16 0 0 0 16 16h24a16 16 0 0 0 16-16v-16h96v16a16 16 0 0 0 16 16h24a16 16 0 0 0 16-16v-80h8a8 8 0 0 0 0-16M69.2 48h117.6l24.89 56H44.31ZM64 200H40v-16h24Zm128 0v-16h24v16Zm24-32H40v-48h176ZM56 144a8 8 0 0 1 8-8h16a8 8 0 0 1 0 16H64a8 8 0 0 1-8-8m112 0a8 8 0 0 1 8-8h16a8 8 0 0 1 0 16h-16a8 8 0 0 1-8-8"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 256 256"><path d="M140 204a12 12 0 1 1-12-12a12 12 0 0 1 12 12m97.08-117a172 172 0 0 0-218.16 0a8 8 0 0 0 10.16 12.37a156 156 0 0 1 197.84 0A8 8 0 0 0 237.08 87M205 122.77a124 124 0 0 0-153.94 0A8 8 0 0 0 61 135.31a108 108 0 0 1 134.06 0a8 8 0 0 0 11.24-1.3a8 8 0 0 0-1.3-11.24m-32.26 35.76a76.05 76.05 0 0 0-89.42 0a8 8 0 0 0 9.42 12.94a60 60 0 0 1 70.58 0a8 8 0 1 0 9.42-12.94"/></symbol>
+    <symbol id="i-snow" viewBox="0 0 256 256"><path d="M223.77 150.09a8 8 0 0 1-5.86 9.68l-24.64 6l6.46 24.11a8 8 0 0 1-5.66 9.8a8.3 8.3 0 0 1-2.07.32a8 8 0 0 1-7.72-5.93l-7.72-28.8L136 141.86v46.83l21.66 21.65a8 8 0 0 1-11.32 11.32L128 203.31l-18.34 18.35a8 8 0 0 1-11.32-11.32L120 188.69v-46.83l-40.55 23.41l-7.72 28.8A8 8 0 0 1 64 200a8.3 8.3 0 0 1-2.08-.27a8 8 0 0 1-5.66-9.8l6.46-24.11l-24.64-6a8 8 0 0 1 3.82-15.54l29.45 7.23L112 128l-40.64-23.46l-29.45 7.23A8 8 0 0 1 40 112a8 8 0 0 1-1.91-15.77l24.64-6l-6.46-24.16a8 8 0 0 1 15.46-4.14l7.72 28.8L120 114.14V67.31L98.34 45.66a8 8 0 0 1 11.32-11.32L128 52.69l18.34-18.35a8 8 0 0 1 11.32 11.32L136 67.31v46.83l40.55-23.41l7.72-28.8a8 8 0 0 1 15.46 4.14l-6.46 24.11l24.64 6A8 8 0 0 1 216 112a8 8 0 0 1-1.91-.23l-29.45-7.23L144 128l40.64 23.46l29.45-7.23a8 8 0 0 1 9.68 5.86"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 256 256"><path d="M120 40V16a8 8 0 0 1 16 0v24a8 8 0 0 1-16 0m72 88a64 64 0 1 1-64-64a64.07 64.07 0 0 1 64 64m-16 0a48 48 0 1 0-48 48a48.05 48.05 0 0 0 48-48M58.34 69.66a8 8 0 0 0 11.32-11.32l-16-16a8 8 0 0 0-11.32 11.32Zm0 116.68l-16 16a8 8 0 0 0 11.32 11.32l16-16a8 8 0 0 0-11.32-11.32M192 72a8 8 0 0 0 5.66-2.34l16-16a8 8 0 0 0-11.32-11.32l-16 16A8 8 0 0 0 192 72m5.66 114.34a8 8 0 0 0-11.32 11.32l16 16a8 8 0 0 0 11.32-11.32ZM48 128a8 8 0 0 0-8-8H16a8 8 0 0 0 0 16h24a8 8 0 0 0 8-8m80 80a8 8 0 0 0-8 8v24a8 8 0 0 0 16 0v-24a8 8 0 0 0-8-8m112-88h-24a8 8 0 0 0 0 16h24a8 8 0 0 0 0-16"/></symbol>
+    <symbol id="i-sunset" viewBox="0 0 256 256"><path d="M240 152h-40.45a74 74 0 0 0 .45-8a72 72 0 0 0-144 0a74 74 0 0 0 .45 8H16a8 8 0 0 0 0 16h224a8 8 0 0 0 0-16m-168-8a56 56 0 1 1 111.41 8H72.59a56 56 0 0 1-.59-8m144 56a8 8 0 0 1-8 8H48a8 8 0 0 1 0-16h160a8 8 0 0 1 8 8M72.84 43.58a8 8 0 0 1 14.32-7.16l8 16a8 8 0 0 1-14.32 7.16Zm-56 48.84a8 8 0 0 1 10.74-3.57l16 8a8 8 0 0 1-7.16 14.31l-16-8a8 8 0 0 1-3.58-10.74m192 15.16a8 8 0 0 1 3.58-10.73l16-8a8 8 0 1 1 7.16 14.31l-16 8a8 8 0 0 1-10.74-3.58m-48-55.16l8-16a8 8 0 0 1 14.32 7.16l-8 16a8 8 0 1 1-14.32-7.16"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 256 256"><path d="M183.89 153.34a57.6 57.6 0 0 1-46.56 46.55a9 9 0 0 1-1.33.11a8 8 0 0 1-1.32-15.89c16.57-2.79 30.63-16.85 33.44-33.45a8 8 0 0 1 15.78 2.68ZM216 144a88 88 0 0 1-176 0c0-27.92 11-56.47 32.66-84.85a8 8 0 0 1 11.93-.89l24.12 23.41l22-60.41a8 8 0 0 1 12.63-3.41C165.21 36 216 84.55 216 144m-16 0c0-46.09-35.79-85.92-58.21-106.33l-22.27 61.07a8 8 0 0 1-13.09 3L80.06 76.16C64.09 99.21 56 122 56 144a72 72 0 0 0 144 0"/></symbol>
+    <symbol id="i-gamepad" viewBox="0 0 256 256"><path d="M176 112h-24a8 8 0 0 1 0-16h24a8 8 0 0 1 0 16m-72-16h-8v-8a8 8 0 0 0-16 0v8h-8a8 8 0 0 0 0 16h8v8a8 8 0 0 0 16 0v-8h8a8 8 0 0 0 0-16m137.48 104.65a36 36 0 0 1-54.94 4.81c-.12-.12-.24-.24-.35-.37L146.48 160h-37l-39.67 45.09l-.35.37A36.08 36.08 0 0 1 44 216a36 36 0 0 1-35.44-42.25a.7.7 0 0 1 0-.14l16.37-84.09A59.88 59.88 0 0 1 83.89 40H172a60.08 60.08 0 0 1 59 49.25v.18l16.37 84.17a.7.7 0 0 1 0 .14a35.74 35.74 0 0 1-5.89 26.91M172 144a44 44 0 0 0 0-88H83.89a43.9 43.9 0 0 0-43.21 36.37v.13L24.3 176.59A20 20 0 0 0 58 194.3l41.92-47.59a8 8 0 0 1 6-2.71Zm59.7 32.59l-8.74-45A60 60 0 0 1 172 160h-4.2l30.2 34.31a20.09 20.09 0 0 0 17.46 5.39a20 20 0 0 0 16.23-23.11Z"/></symbol>
+    <symbol id="i-palm" viewBox="0 0 256 256"><path d="M237.79 53.23a66.86 66.86 0 0 0-97.74 0a72.2 72.2 0 0 0-12.05 17a72.2 72.2 0 0 0-12-17a66.86 66.86 0 0 0-97.74 0a8 8 0 0 0 2.6 12.85L77 90.55a71.42 71.42 0 0 0-43.36 33.21a70.64 70.64 0 0 0-7.2 54.32A8 8 0 0 0 39 182.36l81-61.68V224a8 8 0 0 0 16 0V120.68l81 61.68a8 8 0 0 0 12.57-4.28a70.64 70.64 0 0 0-7.2-54.32A71.42 71.42 0 0 0 179 90.55l56.22-24.47a8 8 0 0 0 2.6-12.85ZM67.08 48a51.13 51.13 0 0 1 37.28 16.26a56.53 56.53 0 0 1 14.26 26.93L39 56.53A50.5 50.5 0 0 1 67.08 48M40 161.5a54.8 54.8 0 0 1 7.47-29.7a55.55 55.55 0 0 1 34-25.89A56.5 56.5 0 0 1 96.1 104a55.8 55.8 0 0 1 16.23 2.41Zm168.5-29.7a54.8 54.8 0 0 1 7.5 29.7l-72.3-55.1a56.3 56.3 0 0 1 64.83 25.4Zm-71.12-40.61a56.53 56.53 0 0 1 14.26-26.93A51.13 51.13 0 0 1 188.92 48A50.5 50.5 0 0 1 217 56.53Z"/></symbol>
+    <symbol id="i-pot" viewBox="0 0 256 256"><path d="M88 48V16a8 8 0 0 1 16 0v32a8 8 0 0 1-16 0m40 8a8 8 0 0 0 8-8V16a8 8 0 0 0-16 0v32a8 8 0 0 0 8 8m32 0a8 8 0 0 0 8-8V16a8 8 0 0 0-16 0v32a8 8 0 0 0 8 8m92.8 46.4L224 124v60a32 32 0 0 1-32 32H64a32 32 0 0 1-32-32v-60L3.2 102.4a8 8 0 0 1 9.6-12.8L32 104V80a8 8 0 0 1 8-8h176a8 8 0 0 1 8 8v24l19.2-14.4a8 8 0 0 1 9.6 12.8M208 88H48v96a16 16 0 0 0 16 16h128a16 16 0 0 0 16-16Z"/></symbol>
+    <symbol id="i-goal" viewBox="0 0 256 256"><path d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m76.52 147.42H170.9l-9.26-12.76l12.63-36.78l15-4.89l26.24 20.13a87.4 87.4 0 0 1-10.99 34.3m-164-34.3L66.71 117l15 4.89l12.63 36.78l-9.24 12.75H51.48a87.4 87.4 0 0 1-11.01-34.3Zm10-50.64l5.51 18.6l-15.32 11.69a87.3 87.3 0 0 1 9.72-30.29ZM109 152l-11.46-33.35L128 97.71l30.46 20.94L147 152Zm91.07-46.92l5.51-18.6a87.3 87.3 0 0 1 9.72 30.29Zm-6.2-35.38l-9.51 32.08l-15.07 4.89L136 83.79V68.21l29.09-20a88.6 88.6 0 0 1 28.77 21.49Zm-47.8-27.83L128 54.29l-18.07-12.42a88.2 88.2 0 0 1 36.14 0m-55.16 6.34l29.09 20v15.58l-33.28 22.88l-15.07-4.89l-9.51-32.08a88.6 88.6 0 0 1 28.77-21.49M63.15 187.42h20.37l7.17 20.27a88.4 88.4 0 0 1-27.54-20.27M110 214.13l-11.88-33.42l9.23-12.71h41.3l9.23 12.71l-11.83 33.42a88 88 0 0 1-36.1 0Zm55.36-6.44l7.17-20.27h20.37a88.4 88.4 0 0 1-27.59 20.27Z"/></symbol>
+    <symbol id="i-speaker" viewBox="0 0 256 256"><path d="M155.51 24.81a8 8 0 0 0-8.42.88L77.25 80H32a16 16 0 0 0-16 16v64a16 16 0 0 0 16 16h45.25l69.84 54.31A8 8 0 0 0 160 224V32a8 8 0 0 0-4.49-7.19M32 96h40v64H32Zm112 111.64l-56-43.55V91.91l56-43.55Zm54-106.08a40 40 0 0 1 0 52.88a8 8 0 0 1-12-10.58a24 24 0 0 0 0-31.72a8 8 0 0 1 12-10.58M248 128a79.9 79.9 0 0 1-20.37 53.34a8 8 0 0 1-11.92-10.67a64 64 0 0 0 0-85.33a8 8 0 1 1 11.92-10.67A79.83 79.83 0 0 1 248 128"/></symbol>
+    <symbol id="i-tent" viewBox="0 0 256 256"><path d="m255.31 188.75l-64-144A8 8 0 0 0 184 40H72a8 8 0 0 0-7.27 4.69a.2.2 0 0 0 0 .06v.12L.69 188.75A8 8 0 0 0 8 200h240a8 8 0 0 0 7.31-11.25M64 184H20.31L64 85.7Zm16 0V85.7l43.69 98.3Zm61.2 0L84.31 56h94.49l56.89 128Z"/></symbol>
+    <symbol id="i-tub" viewBox="0 0 256 256"><path d="M240 96h-32a8 8 0 0 0-8-8h-64a8 8 0 0 0-8 8H64V52a12 12 0 0 1 12-12a12.44 12.44 0 0 1 12.16 9.59a8 8 0 0 0 15.68-3.18A28.32 28.32 0 0 0 76 24a28 28 0 0 0-28 28v44H16a8 8 0 0 0-8 8v40a56.06 56.06 0 0 0 56 56v16a8 8 0 0 0 16 0v-16h96v16a8 8 0 0 0 16 0v-16a56.06 56.06 0 0 0 56-56v-40a8 8 0 0 0-8-8m-48 8v32h-48v-32Zm40 40a40 40 0 0 1-40 40H64a40 40 0 0 1-40-40v-32h104v32a8 8 0 0 0 8 8h64a8 8 0 0 0 8-8v-32h24Z"/></symbol>
+    <symbol id="i-utensils" viewBox="0 0 256 256"><path d="M72 88V40a8 8 0 0 1 16 0v48a8 8 0 0 1-16 0m144-48v184a8 8 0 0 1-16 0v-48h-48a8 8 0 0 1-8-8a268.8 268.8 0 0 1 7.22-56.88c9.78-40.49 28.32-67.63 53.63-78.47A8 8 0 0 1 216 40m-16 13.9c-32.17 24.57-38.47 84.42-39.7 106.1H200Zm-80.11-15.21a8 8 0 1 0-15.78 2.63L112 88.63a32 32 0 0 1-64 0l7.88-47.31a8 8 0 1 0-15.78-2.63l-8 48A8 8 0 0 0 32 88a48.07 48.07 0 0 0 40 47.32V224a8 8 0 0 0 16 0v-88.68A48.07 48.07 0 0 0 128 88a8 8 0 0 0-.11-1.31Z"/></symbol>
+    <symbol id="i-billiard" viewBox="0 0 256 256"><path d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24m0 192a88 88 0 1 1 88-88a88.1 88.1 0 0 1-88 88m21.81-92.61a32 32 0 1 0-43.62 0a36 36 0 1 0 43.62 0M112 100a16 16 0 1 1 16 16a16 16 0 0 1-16-16m16 72a20 20 0 1 1 20-20a20 20 0 0 1-20 20"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 256 256"><path d="M208 40H48a16 16 0 0 0-16 16v56c0 52.72 25.52 84.67 46.93 102.19c23.06 18.86 46 25.26 47 25.53a8 8 0 0 0 4.2 0c1-.27 23.91-6.67 47-25.53C198.48 196.67 224 164.72 224 112V56a16 16 0 0 0-16-16m0 72c0 37.07-13.66 67.16-40.6 89.42a129.3 129.3 0 0 1-39.4 22.2a128.3 128.3 0 0 1-38.92-21.81C61.82 179.51 48 149.3 48 112V56h160ZM82.34 141.66a8 8 0 0 1 11.32-11.32L112 148.69l50.34-50.35a8 8 0 0 1 11.32 11.32l-56 56a8 8 0 0 1-11.32 0Z"/></symbol>
+    <symbol id="i-horse" viewBox="0 0 256 256"><path d="M136 100a12 12 0 1 1-12-12a12 12 0 0 1 12 12m96 29.48A104.29 104.29 0 0 1 130.1 232h-2.17a103.32 103.32 0 0 1-69.26-26a8 8 0 1 1 10.67-12a84.7 84.7 0 0 0 20.1 13.37L116 170.84c-22.78-9.83-47.47-5.65-61.4-3.29a31.84 31.84 0 0 1-31.3-12.83l-.3-.43l-13.78-22a8 8 0 0 1 2.59-11.05L112 59.53V32a8 8 0 0 1 8-8h8a104 104 0 0 1 104 105.48m-16-.22A88 88 0 0 0 128 40v24a8 8 0 0 1-3.81 6.81l-97.13 59.78l9.36 15A15.92 15.92 0 0 0 52 151.77c16-2.7 48.77-8.24 78.07 8.18A40.06 40.06 0 0 0 168 120a8 8 0 0 1 16 0a56.07 56.07 0 0 1-51.8 55.83l-27.11 37.28a91 91 0 0 0 24.69 2.89A88.29 88.29 0 0 0 216 129.26"/></symbol>
+    <symbol id="i-moto" viewBox="0 0 256 256"><path d="M216 120a41 41 0 0 0-6.6.55l-5.82-15.14A55.6 55.6 0 0 1 216 104a8 8 0 0 0 0-16h-19.12l-13.41-34.87A8 8 0 0 0 176 48h-32a8 8 0 0 0 0 16h26.51l9.23 24H152c-18.5 0-33.5 4.31-43.37 12.46a16 16 0 0 1-16.76 2.07c-10.58-4.81-60.74-25.2-65.16-26.93L21 73.36A17.7 17.7 0 0 0 16 72a8 8 0 0 0-2.87 15.46c.46.18 47.19 18.3 72.13 29.63a32.15 32.15 0 0 0 33.56-4.29c4.86-4 14.57-8.8 33.19-8.8h18.82a71.74 71.74 0 0 0-24.17 36.59A15.86 15.86 0 0 1 131.32 152H79.2a40 40 0 1 0 0 16h52.12a31.91 31.91 0 0 0 30.74-23.1a56 56 0 0 1 26.59-33.72l5.82 15.13A40 40 0 1 0 216 120M40 168h22.62a24 24 0 1 1 0-16H40a8 8 0 0 0 0 16m176 16a24 24 0 0 1-15.58-42.23l8.11 21.1a8 8 0 1 0 14.94-5.74L215.35 136h.65a24 24 0 0 1 0 48"/></symbol>
+    <symbol id="i-send" viewBox="0 0 256 256"><path d="M231.4 44.34v.15l-58.2 191.94a15.88 15.88 0 0 1-14 11.51q-.69.06-1.38.06a15.86 15.86 0 0 1-14.42-9.15l-36.4-74.7a4 4 0 0 1 .77-4.58l57.92-57.92a8 8 0 0 0-11.31-11.31l-57.95 57.92a4 4 0 0 1-4.58.77l-74.77-36.39a16 16 0 0 1 2.49-29.8l191.94-58.2h.15a16 16 0 0 1 19.74 19.7"/></symbol>
+    <symbol id="i-checks" viewBox="0 0 256 256"><path d="m149.61 85.71l-89.6 88a8 8 0 0 1-11.22 0L10.39 136a8 8 0 1 1 11.22-11.41l32.79 32.2l84-82.5a8 8 0 1 1 11.22 11.42Zm96.1-11.32a8 8 0 0 0-11.32-.1l-84 82.5l-18.83-18.5a8 8 0 0 0-11.21 11.42l24.43 24a8 8 0 0 0 11.22 0l89.6-88a8 8 0 0 0 .11-11.32"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 256 256"><path d="M224 128a96 96 0 0 1-94.71 96H128a95.38 95.38 0 0 1-65.9-26.2a8 8 0 0 1 11-11.63a80 80 0 1 0-1.67-114.78a3 3 0 0 1-.26.25L44.59 96H72a8 8 0 0 1 0 16H24a8 8 0 0 1-8-8V56a8 8 0 0 1 16 0v29.8L60.25 60A96 96 0 0 1 224 128"/></symbol>
+    <symbol id="i-whatsapp" viewBox="0 0 256 256"><path d="m187.58 144.84l-32-16a8 8 0 0 0-8 .5l-14.69 9.8a40.55 40.55 0 0 1-16-16l9.8-14.69a8 8 0 0 0 .5-8l-16-32A8 8 0 0 0 104 64a40 40 0 0 0-40 40a88.1 88.1 0 0 0 88 88a40 40 0 0 0 40-40a8 8 0 0 0-4.42-7.16M152 176a72.08 72.08 0 0 1-72-72a24 24 0 0 1 19.29-23.54l11.48 23L101 118a8 8 0 0 0-.73 7.51a56.47 56.47 0 0 0 30.15 30.15A8 8 0 0 0 138 155l14.61-9.74l23 11.48A24 24 0 0 1 152 176M128 24a104 104 0 0 0-91.82 152.88l-11.35 34.05a16 16 0 0 0 20.24 20.24l34.05-11.35A104 104 0 1 0 128 24m0 192a87.87 87.87 0 0 1-44.06-11.81a8 8 0 0 0-6.54-.67L40 216l12.47-37.4a8 8 0 0 0-.66-6.54A88 88 0 1 1 128 216"/></symbol>
+    <symbol id="i-couch" viewBox="0 0 256 256"><path d="M240 106.17V72a16 16 0 0 0-16-16H32a16 16 0 0 0-16 16v34.17A16 16 0 0 0 8 120v48a16 16 0 0 0 16 16h8v16a8 8 0 0 0 16 0v-16h160v16a8 8 0 0 0 16 0v-16h8a16 16 0 0 0 16-16v-48a16 16 0 0 0-8-13.83M224 104h-8a16 16 0 0 0-16 16v16h-64V72h88ZM120 72v64H56v-16a16 16 0 0 0-16-16h-8V72Zm112 96H24v-48h16v24a8 8 0 0 0 8 8h160a8 8 0 0 0 8-8v-24h16Z"/></symbol>
+    <symbol id="i-tv" viewBox="0 0 256 256"><path d="M216 64h-68.69l34.35-34.34a8 8 0 1 0-11.32-11.32L128 60.69L85.66 18.34a8 8 0 0 0-11.32 11.32L108.69 64H40a16 16 0 0 0-16 16v120a16 16 0 0 0 16 16h176a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16M40 80h104v120H40Zm176 120h-56V80h56zm-16-84a12 12 0 1 1-12-12a12 12 0 0 1 12 12m0 48a12 12 0 1 1-12-12a12 12 0 0 1 12 12"/></symbol>
+    <symbol id="i-user" viewBox="0 0 256 256"><path d="M230.92 212c-15.23-26.33-38.7-45.21-66.09-54.16a72 72 0 1 0-73.66 0c-27.39 8.94-50.86 27.82-66.09 54.16a8 8 0 1 0 13.85 8c18.84-32.56 52.14-52 89.07-52s70.23 19.44 89.07 52a8 8 0 1 0 13.85-8M72 96a56 56 0 1 1 56 56a56.06 56.06 0 0 1-56-56"/></symbol>
+  </svg>
+
+  <header class="site-header" id="inicio">
+    <a class="brand" href="#inicio" aria-label="Luisito el Viajero, inicio">
+      <img class="brand-logo" src="assets/logo.webp" alt="Luisito el Viajero" width="440" height="218" />
+    </a>
+    <nav class="main-nav" id="mainNav" aria-label="Navegación principal">
+      <a href="#cabanas">Cabañas</a>
+      <a href="#preguntas">Preguntas</a>
+      <a href="#contacto">Contacto</a>
+      <button class="button button-light nav-cta" type="button" data-action="contact"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp"/></svg> Habla con un asesor</button>
+    </nav>
+    <button class="header-cta" type="button" data-action="contact" aria-label="Cotizar con un asesor"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp"/></svg><span class="cta-long">Habla con un asesor</span><span class="cta-short">Cotizar</span></button>
+    <button class="menu-toggle" id="menuToggle" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="mainNav"><span></span><span></span></button>
+    <div class="scroll-progress" aria-hidden="true"></div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="heroTitle">
+      <div class="hero-image" aria-hidden="true"></div>
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div class="hero-content wrap">
+        <div class="hero-text">
+          <h1 id="heroTitle">Escápate a&nbsp;lo <em>extraordinario.</em></h1>
+          <p class="hero-copy">Descubre las mejores cabañas del Atlántico con la recomendación de Luisito el Viajero.<span class="hero-copy-more"> Naturaleza, confort y experiencias inolvidables en un solo lugar.</span></p>
+        </div>
+        <div class="hero-actions">
+          <a class="button button-light" href="#cabanas">Explorar cabañas <svg class="icon icon-arrow" aria-hidden="true"><use href="#i-arrow-down"/></svg></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section catalog-section" id="cabanas" aria-labelledby="catalogTitle">
+      <div class="wrap">
+        <h2 class="sr-only" id="catalogTitle">Cabañas y espacios disponibles</h2>
+        <div class="catalog-toolbar reveal">
+          <div class="loc-filter" id="locFilter">
+            <button type="button" class="loc-button" id="locButton" aria-haspopup="listbox" aria-expanded="false" aria-controls="locMenu">
+              <svg class="icon" aria-hidden="true"><use href="#i-pin"/></svg>
+              <span class="loc-label" id="locLabel">Ubicación</span>
+              <svg class="icon icon-chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
+            </button>
+            <div class="loc-menu" id="locMenu" role="listbox" aria-label="Filtrar por ubicación"></div>
+          </div>
+          <button type="button" class="fav-toggle" id="favToggle" data-action="toggle-favorites" aria-pressed="false" aria-label="Ver mis favoritos"><svg class="icon" aria-hidden="true"><use href="#i-heart"/></svg><span class="fav-label">Favoritos</span><span class="fav-count" id="favCount" hidden>0</span></button>
+          <p class="result-count" id="resultCount" aria-live="polite"></p>
+        </div>
+        <div class="property-grid" id="propertyGrid" aria-live="polite"></div>
+        <p class="catalog-note">Fotos tomadas de los reels. Capacidades y precios de ejemplo.</p>
+      </div>
+    </section>
+
+    <section class="section faq-section" id="preguntas" aria-labelledby="faqTitle">
+      <div class="wrap faq-layout">
+        <div class="faq-intro reveal">
+          <h2 id="faqTitle">Preguntas frecuentes</h2>
+          <p>¿No encuentras tu duda? Escríbenos y un asesor te ayuda a elegir.</p>
+          <button class="button button-outline" type="button" data-action="whatsapp"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp"/></svg> Escribir a un asesor</button>
+        </div>
+        <div class="faq-list">
+          <details class="reveal" style="--i:0"><summary>¿El precio cambia según la cantidad de personas?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Sí. Cada cabaña tiene tarifas por rango de personas y por temporada. El cotizador te da un estimado al instante.</p></details>
+          <details class="reveal" style="--i:1"><summary>¿Puedo ir solo por el día?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Sí. Varias opciones ofrecen pasadía: en el cotizador deja la salida vacía y verás el valor del plan para tu grupo.</p></details>
+          <details class="reveal" style="--i:2"><summary>¿Queda reservada la fecha al enviar la solicitud?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>No. Primero confirmamos la disponibilidad con el propietario y te respondemos antes de que hagas cualquier pago.</p></details>
+          <details class="reveal" style="--i:3"><summary>¿Qué pasa si mi fecha no está disponible?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Te proponemos otras fechas u opciones parecidas para que no pierdas el plan.</p></details>
+          <details class="reveal" style="--i:4"><summary>¿Puedo consultar por un evento o un grupo grande?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>Sí. Los eventos y los grupos grandes se cotizan a medida: indícanos la fecha y el número de personas.</p></details>
+          <details class="reveal" style="--i:5"><summary>¿Cómo funciona el anticipo?<svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg></summary><p>El anticipo y las condiciones de saldo y cancelación dependen de cada cabaña. Te los confirmamos al responder tu solicitud.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section" aria-labelledby="ctaTitle">
+      <div class="wrap">
+        <div class="cta-card reveal">
+          <div class="cta-copy">
+            <p class="cta-kicker">Tu próxima escapada</p>
+            <h2 id="ctaTitle">¿Ya sabes cuándo quieres ir?</h2>
+            <p class="cta-text">Cuéntanos la fecha y cuántos son. Te respondemos con disponibilidad y precio.</p>
+            <ul class="cta-points">
+              <li><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg>Cotizas en un minuto</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-shield"/></svg>Sin cobros hasta confirmar</li>
+              <li><svg class="icon" aria-hidden="true"><use href="#i-users"/></svg>Te atiende un asesor</li>
+            </ul>
+            <div class="cta-actions">
+              <button class="button button-wa" type="button" data-action="whatsapp"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp"/></svg> Hablar por WhatsApp</button>
+              <a class="button button-ghost" href="#cabanas">Ver cabañas</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contacto">
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <a class="brand brand-footer" href="#inicio" aria-label="Luisito el Viajero, inicio"><img class="brand-logo" src="assets/logo.webp" alt="Luisito el Viajero" width="440" height="218" /></a>
+        <p>Cabañas, pasadías y eventos en la costa Caribe, elegidos por Luisito el Viajero.</p>
+      </div>
+      <nav class="footer-col" aria-label="Explorar">
+        <h3>Explorar</h3>
+        <a href="#cabanas">Cabañas</a>
+        <button type="button" data-action="show-favorites">Mis favoritos</button>
+        <a href="#preguntas">Preguntas frecuentes</a>
+      </nav>
+      <div class="footer-col">
+        <h3>Contacto</h3>
+        <p>Escríbenos y te ayudamos a elegir la cabaña ideal.</p>
+        <button class="button button-wa" type="button" data-action="whatsapp"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp"/></svg> Habla con un asesor</button>
+      </div>
+    </div>
+    <div class="wrap footer-bottom"><span>© <span id="yearNow"></span> Luisito el Viajero</span><span>Precios y propiedades de ejemplo</span><a href="#privacidad" data-action="privacy">Privacidad</a><a class="to-top" href="#inicio"><svg class="icon" aria-hidden="true"><use href="#i-arrow-up"/></svg>Volver arriba</a></div>
+  </footer>
+
+  <button class="wa-fab" id="waFab" type="button" data-action="whatsapp" aria-label="Escríbenos por WhatsApp"><svg class="icon" aria-hidden="true"><use href="#i-whatsapp"/></svg><span class="wa-label" id="waLabel">¿Te ayudamos a elegir?</span><span class="wa-badge" id="waBadge" hidden aria-hidden="true"></span></button>
+
+  <div class="modal-root" id="propertyModal" aria-hidden="true"></div>
+  <div class="modal-root" id="contactModal" aria-hidden="true"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="data.js"></script>
+  <script src="pricing.js"></script>
+  <script src="assistant.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

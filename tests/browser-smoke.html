@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Smoke test · Luisito el Viajero</title>
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 20px; }
+    .pass { color: #1a7f37; } .fail { color: #cf222e; font-weight: 700; }
+    iframe { position: absolute; left: -9999px; top: 0; border: 0; }
+  </style>
+</head>
+<body>
+  <h1>Smoke test de navegador</h1>
+  <p>Ejecuta la web real en un iframe y comprueba las interacciones. Abrir con el servidor local: <code>/tests/browser-smoke.html</code></p>
+  <ul id="results"></ul>
+  <p id="summary">Ejecutando…</p>
+  <script>
+  (async () => {
+    const results = document.getElementById('results');
+    const failures = [];
+    let passed = 0;
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    function record(name, error) {
+      const li = document.createElement('li');
+      li.className = error ? 'fail' : 'pass';
+      li.textContent = `${error ? 'FAIL' : 'PASS'} · ${name}${error ? ' — ' + error.message : ''}`;
+      results.appendChild(li);
+      if (error) failures.push(name); else passed += 1;
+    }
+    function assert(condition, message) { if (!condition) throw new Error(message || 'aserción fallida'); }
+    async function test(name, fn) {
+      try { await fn(); record(name); } catch (error) { record(name, error); }
+    }
+
+    function loadApp(width) {
+      return new Promise(resolve => {
+        const frame = document.createElement('iframe');
+        frame.width = width; frame.height = 900;
+        frame.src = '../index.html?smoke=' + Date.now();
+        frame.onload = () => resolve(frame);
+        document.body.appendChild(frame);
+      });
+    }
+
+    try { localStorage.removeItem('luisito:favoritos'); localStorage.removeItem('luisito:chat'); } catch (_) { /* sin almacenamiento */ }
+    const frame = await loadApp(1280);
+    const win = frame.contentWindow;
+    const doc = frame.contentDocument;
+    const $ = (sel, root = doc) => root.querySelector(sel);
+    const $$ = (sel, root = doc) => [...root.querySelectorAll(sel)];
+    const config = win.DEMO_CONFIG;
+    config.brand.chatTypingMs = 0; // sin esperas de «escribiendo…»; una prueba propia las comprueba
+    const pad = n => String(n).padStart(2, '0');
+    const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    /** Próxima fecha con ese día de la semana (0 = domingo) al menos `minAhead` días en el futuro. */
+    function nextWeekday(dow, minAhead) {
+      const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + minAhead);
+      while (d.getDay() !== dow) d.setDate(d.getDate() + 1);
+      return iso(d);
+    }
+    function setValue(el, value, eventName = 'input') {
+      el.value = value;
+      el.dispatchEvent(new win.Event(eventName, { bubbles: true }));
+      el.dispatchEvent(new win.Event('change', { bubbles: true }));
+    }
+    const closeAll = async () => { win.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); await sleep(50); };
+
+    await test('la página carga sin errores y muestra una tarjeta por propiedad', () => {
+      assert(config.properties.length >= 19, 'se esperaban todas las cabañas cargadas');
+      assert($$('.property-card').length === config.properties.length, `se esperaban ${config.properties.length} tarjetas y hay ${$$('.property-card').length}`);
+      assert(win.DemoPricing && typeof win.DemoPricing.calculateQuote === 'function', 'falta DemoPricing');
+    });
+
+    await test('las fuentes cargan desde local y no hay peticiones a otros orígenes', async () => {
+      await doc.fonts.ready;
+      const families = [...doc.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/"/g, ''));
+      for (const family of ['DM Sans', 'Cormorant Garamond']) assert(families.includes(family), `no se cargó ${family}`);
+      assert([...doc.fonts].some(f => f.family.replace(/"/g, '') === 'Cormorant Garamond' && f.style === 'italic' && f.status === 'loaded'), 'no se cargó la cursiva de Cormorant Garamond (énfasis del hero)');
+      const external = win.performance.getEntriesByType('resource').filter(e => !e.name.startsWith(win.location.origin)).map(e => e.name);
+      assert(external.length === 0, 'peticiones externas: ' + external.join(', '));
+    });
+
+    await test('tipografía: serif editorial solo en títulos y cifras de ficha; sans en interfaz, precios de tarjeta y chat', async () => {
+      await doc.fonts.ready;
+      const style = el => win.getComputedStyle(el);
+      const serif = el => /^"?Cormorant Garamond/.test(style(el).fontFamily);
+      const sans = el => /^"?DM Sans/.test(style(el).fontFamily);
+      assert(serif($('.hero h1')) && style($('.hero h1')).fontWeight === '500', 'el H1 del hero va en Cormorant 500');
+      assert(style($('.hero h1 em')).fontStyle === 'italic' && serif($('.hero h1 em')), 'el énfasis del H1 va en cursiva serif');
+      assert(serif($('#faqTitle')) && serif($('#ctaTitle')), 'los H2 de sección van en serif');
+      assert(serif($('.card-title')), 'el nombre de la cabaña va en serif');
+      for (const selector of ['.card-price strong', '.card-location', '.card-spec', '.button', '.loc-button', '.fav-toggle', '.faq-list summary', '.footer-col h3', '.main-nav a', '.cta-kicker', '.catalog-note']) {
+        assert(sans($(selector)), `${selector} debe ir en sans (${style($(selector)).fontFamily})`);
+      }
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(80);
+      for (const selector of ['#propertyModalTitle', '.pm-subtitle', '.calc-title', '#modalPriceValue', '.result-total strong']) {
+        assert(serif($(selector)), `${selector} debe ir en serif (${style($(selector)).fontFamily})`);
+      }
+      for (const selector of ['#modalPriceValue em', '.fact strong', '.amenity', '.cell label', '.result-total', '.pm-bar-price strong', '.calculator .button']) {
+        assert(sans($(selector)), `${selector} debe ir en sans (${style($(selector)).fontFamily})`);
+      }
+      for (const selector of ['#modalPriceValue', '.result-total strong']) {
+        assert(style($(selector)).fontVariantNumeric.includes('lining-nums'), `${selector}: las cifras de dinero deben ser alineadas, no de texto`);
+      }
+      await closeAll();
+      $('#waFab').click();
+      await sleep(60);
+      assert(sans($('#chatTitle')) && sans($('.bubble')) && sans($('#chatInput')), 'el chat imita WhatsApp: todo en sans');
+      await closeAll();
+    });
+
+    await test('botones sutiles: píldoras de filtro, botones y flotante con tamaños contenidos (sin bajar de 44 px táctiles)', async () => {
+      const box = sel => ({ w: $(sel).offsetWidth, h: $(sel).offsetHeight }); // tamaño de diseño: ignora animaciones de entrada
+      const limits = [
+        ['#locButton', 44, 46, 260], ['#favToggle', 44, 46, 160], ['.header-cta', 44, 46, 240],
+        ['.hero-actions .button', 44, 48, 260], ['.cta-actions .button', 44, 48, 280], ['#waFab', 44, 54, 400]
+      ];
+      for (const [sel, minH, maxH, maxW] of limits) {
+        const { w, h } = box(sel);
+        assert(h >= minH - 0.5 && h <= maxH, `${sel}: alto ${Math.round(h)} px (debe estar entre ${minH} y ${maxH})`);
+        assert(w <= maxW, `${sel}: ancho ${Math.round(w)} px (máximo ${maxW})`);
+      }
+      const weight = win.getComputedStyle($('#locButton')).fontWeight;
+      assert(Number(weight) <= 500, 'las píldoras de filtro van en peso medio, no en negrita (' + weight + ')');
+    });
+
+    await test('los nombres de las cabañas no se cortan con «…» en móvil (320 y 390 px)', async () => {
+      for (const width of [320, 390]) {
+        // +15 px: la barra de desplazamiento clásica del iframe de prueba; en un móvil real es superpuesta y no resta ancho.
+        const narrow = await loadApp(width + 15);
+        await narrow.contentDocument.fonts.ready;
+        await sleep(150);
+        const cut = [...narrow.contentDocument.querySelectorAll('.card-title')].filter(el => el.scrollHeight > el.clientHeight + 3).map(el => el.textContent);
+        const root = narrow.contentDocument.documentElement;
+        narrow.remove();
+        assert(cut.length === 0, `a ${width} px se cortan: ${cut.join(', ')}`);
+        assert(root.scrollWidth <= root.clientWidth + 1, `a ${width} px hay desbordamiento horizontal`);
+      }
+    });
+
+    await test('hero: titular serif y subtexto sans centrados en la parte alta, con el botón debajo (390, 768 y 1280 px)', async () => {
+      for (const width of [390, 768, 1280]) {
+        const view = await loadApp(width + 15); // +15 px: barra de desplazamiento clásica del iframe de prueba
+        const vdoc = view.contentDocument;
+        await vdoc.fonts.ready;
+        await sleep(1500); // termina la animación de entrada
+        const r = sel => vdoc.querySelector(sel).getBoundingClientRect();
+        const hero = r('.hero'), h1 = r('.hero h1'), copy = r('.hero-copy'), action = r('.hero-actions .button');
+        const mid = hero.left + hero.width / 2;
+        const copyText = vdoc.querySelector('.hero-copy');
+        const hint = `a ${width} px`;
+        assert(Math.abs(h1.left + h1.width / 2 - mid) <= 4, `${hint}: el titular no está centrado`);
+        assert(Math.abs(copy.left + copy.width / 2 - mid) <= 4, `${hint}: el subtexto no está centrado`);
+        assert(h1.top > hero.top + 70 && copy.bottom < hero.top + hero.height * 0.65, `${hint}: el texto debe quedar en la parte alta, ni pegado a la cabecera ni abajo (h1 ${Math.round(h1.top)}, subtexto hasta ${Math.round(copy.bottom)} de ${Math.round(hero.height)})`);
+        assert(action.top > copy.bottom + 60, `${hint}: el botón debe quedar bien por debajo del texto`);
+        assert(view.contentWindow.getComputedStyle(vdoc.querySelector('.hero-text')).textAlign === 'center' || view.contentWindow.getComputedStyle(vdoc.querySelector('.hero-content')).textAlign === 'center', `${hint}: texto centrado`);
+        assert(copyText.textContent.trim().length > 40 && !/diferente/i.test(vdoc.querySelector('.hero h1').textContent), `${hint}: copy del hero`);
+        const root = vdoc.documentElement;
+        assert(root.scrollWidth <= root.clientWidth + 1, `${hint}: desbordamiento horizontal`);
+        view.remove();
+      }
+    });
+
+    await test('los metadatos de SEO y el favicon están presentes', () => {
+      assert($('meta[property="og:title"]'), 'og:title');
+      assert($('meta[name="twitter:card"]'), 'twitter:card');
+      assert($('link[rel="icon"]'), 'favicon');
+      assert(!$('script[type="application/ld+json"]'), 'en modo demo no debe haber datos estructurados de propiedades ficticias');
+    });
+
+    await test('el filtro de ubicación muestra y restaura tarjetas', async () => {
+      assert(!$('[data-filter]'), 'ya no debe haber filtros por tipo de plan');
+      const button = $('#locButton');
+      button.click();
+      assert(button.getAttribute('aria-expanded') === 'true' && $('#locMenu').classList.contains('is-open'), 'el menú debía abrirse');
+      const cities = $$('[data-location]:not([data-location="all"])').map(el => el.dataset.location);
+      assert(cities.length === new Set(config.properties.map(p => p.city)).size, 'una opción por municipio distinto: ' + cities);
+      $('[data-location="Sabanagrande"]').click();
+      const expectedHere = config.properties.filter(p => p.city === 'Sabanagrande').map(p => p.name).sort().join('|');
+      assert($$('.property-card').length > 0 && $$('.card-title').map(e => e.textContent).sort().join('|') === expectedHere, 'Sabanagrande → ' + $$('.card-title').map(e => e.textContent));
+      assert($('#locLabel').textContent === 'Sabanagrande' && button.classList.contains('is-filtered'), 'el botón debe mostrar el filtro activo');
+      assert(button.getAttribute('aria-expanded') === 'false', 'el menú debía cerrarse al elegir');
+      button.click();
+      doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      assert(button.getAttribute('aria-expanded') === 'false', 'Escape debía cerrar el menú');
+      button.click();
+      $('[data-location="all"]').click();
+      assert($$('.property-card').length === config.properties.length, 'todas → todas las tarjetas');
+    });
+
+    await test('la tarjeta muestra «Desde» + el precio y debajo para cuántas personas, sin «por persona»', () => {
+      const card = id => $(`[data-property-card="${id}"]`);
+      const parts = id => [...card(id).querySelector('.card-price').children].map(el => el.textContent.replace(/\s+/g, '').replace('$', ''));
+      assert(JSON.stringify(parts('casa-karkinos')) === JSON.stringify(['Desde', '1.200.000', '10personas']), 'Casa Karkinos: ' + parts('casa-karkinos'));
+      assert(JSON.stringify(parts('villa-cristal')) === JSON.stringify(['Desde', '700.000', '10personas']), 'Villa Cristal: ' + parts('villa-cristal'));
+      assert($$('.card-price').every(el => !/por persona|por noche/.test(el.textContent)), 'ninguna tarjeta debe decir «por persona» ni «por noche»');
+      assert($$('.photo-label, .reel-pill').length === 0, 'las fotos de las tarjetas no llevan etiquetas encima');
+    });
+
+    await test('los datos con HTML se escapan y no se inyectan elementos', () => {
+      const original = config.properties[0].name;
+      config.properties[0].name = '<img src=x onerror="window.__xss=1"><b>X</b>';
+      $('#locButton').click(); $('[data-location="all"]').click();
+      assert(!$('.card-title img'), 'se inyectó un <img> desde un dato');
+      assert(!$('.card-title b'), 'se inyectó un <b> desde un dato');
+      assert($('.card-title').textContent.includes('<img'), 'el texto debe mostrarse literal');
+      assert(!win.__xss, 'se ejecutó un manejador inyectado');
+      config.properties[0].name = original;
+      $('#locButton').click(); $('[data-location="all"]').click();
+    });
+
+    await test('favoritos alterna aria-pressed', () => {
+      const heart = $('.card-heart');
+      heart.click();
+      assert(heart.getAttribute('aria-pressed') === 'true', 'debía quedar activado');
+      heart.click();
+      assert(heart.getAttribute('aria-pressed') === 'false', 'debía quedar desactivado');
+    });
+
+    await test('los favoritos se guardan, se ven solos en su vista y se recuerdan', async () => {
+      const hearts = () => $$('.card-heart');
+      assert(win.localStorage.getItem('luisito:favoritos') === null || win.localStorage.getItem('luisito:favoritos') === '[]', 'se parte sin favoritos');
+      assert($('#favCount').hidden, 'sin favoritos no hay contador');
+      hearts()[0].click(); hearts()[2].click();
+      assert($('#favCount').textContent === '2' && !$('#favCount').hidden, 'el contador debe marcar 2');
+      assert(JSON.parse(win.localStorage.getItem('luisito:favoritos')).length === 2, 'se guardan en el navegador');
+      $('#favToggle').click();
+      assert($$('.property-card').length === 2 && $('#favToggle').getAttribute('aria-pressed') === 'true', 'la vista de favoritos muestra solo las dos');
+      assert($$('.card-heart').every(h => h.getAttribute('aria-pressed') === 'true'), 'sus corazones están marcados');
+      assert(/2 favoritas/.test($('#resultCount').textContent), 'conteo: ' + $('#resultCount').textContent);
+      hearts()[0].click();
+      assert($$('.property-card').length === 1, 'quitar un favorito lo saca de la vista');
+      hearts()[0].click();
+      assert($$('.property-card').length === 0 && $('.empty-state'), 'sin favoritos se explica cómo guardar');
+      $('[data-action="show-all"]').click();
+      assert($$('.property-card').length === config.properties.length && $('#favToggle').getAttribute('aria-pressed') === 'false', 'ver todas vuelve al catálogo');
+      assert($('#favCount').hidden, 'el contador se oculta al quedar en cero');
+    });
+
+    await test('el botón flotante de WhatsApp aparece al bajar y adapta su texto y su mensaje', async () => {
+      const fab = $('#waFab');
+      await sleep(1700);
+      assert(fab.classList.contains('is-visible'), 'debe estar visible desde el inicio, sin tener que bajar');
+      assert(fab.getBoundingClientRect().width > 0, 'debe tener tamaño real en pantalla');
+      assert(/ayudamos a elegir/i.test($('#waLabel').textContent), 'texto general: ' + $('#waLabel').textContent);
+      // sin número de WhatsApp: abre el formulario con el mensaje ya escrito
+      config.brand.whatsappNumber = '';
+      $('[data-location="Sabanagrande"]') || $('#locButton').click();
+      $('[data-location="Sabanagrande"]').click();
+      assert(/Sabanagrande/.test($('#waLabel').textContent), 'con una ubicación filtrada el texto la nombra');
+      fab.click();
+      await sleep(60);
+      assert($('#contactModal').classList.contains('is-open') && /Sabanagrande/.test($('#chatInput').value), 'el chat debe traer el mensaje escrito: ' + ($('#chatInput') || {}).value);
+      await closeAll();
+      // con favoritas: el texto las cuenta y el asistente las conoce; WhatsApp solo se abre al final de la conversación
+      $('#locButton').click(); $('[data-location="all"]').click();
+      $$('.card-heart')[1].click();
+      assert(/favoritas \(1\)/.test($('#waLabel').textContent), 'con favoritas el texto las cuenta');
+      config.brand.whatsappNumber = '573001234567';
+      let opened = null;
+      win.open = (url) => { opened = url; return null; };
+      fab.click();
+      await sleep(80);
+      assert(opened === null, 'el botón flotante no debe saltarse el asistente');
+      assert($('#contactModal').classList.contains('is-open') && $('#chatInput').value.includes(config.properties[1].name), 'el chat trae la favorita en el mensaje');
+      assert($$('.chat-chip').some(c => /favoritas/i.test(c.textContent)), 'ofrece comparar las favoritas');
+      config.brand.whatsappNumber = '';
+      await closeAll();
+      $$('.card-heart')[1].click();
+    });
+
+    await test('la ficha se abre, calcula y se cierra con Escape', async () => {
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(60);
+      assert($('#propertyModal').classList.contains('is-open'), 'la ficha no se abrió');
+      assert($('#propertyModal .calc-result .result-total'), 'no hay total calculado');
+      doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await sleep(50);
+      assert(!$('#propertyModal').classList.contains('is-open'), 'Escape debía cerrar la ficha');
+    });
+
+    await test('la calculadora desglosa noches de fin de semana y de entre semana', async () => {
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(60);
+      const friday = nextWeekday(5, 10);
+      const monday = nextWeekday(1, 10 + 3);
+      const [arrive, leave] = [friday, iso(new Date(new Date(friday + 'T12:00:00').getTime() + 3 * 86400000))];
+      setValue($('#calc-date'), arrive);
+      setValue($('#calc-departure'), leave);
+      assert($$('#calcResult .result-line').length >= 2, 'viernes→lunes debe tener al menos 2 líneas de desglose');
+      const expected = win.DemoPricing.calculateQuote({ property: config.properties[0], mode: 'alojamiento', people: 10, date: arrive, departure: leave }, iso(new Date()), 30);
+      const shown = $('.result-total strong', doc).textContent.replace(/\D/g, '');
+      assert(shown === String(expected.total), `total en pantalla ${shown} ≠ motor ${expected.total}`);
+      assert(monday > friday, 'sanidad de fechas del propio test');
+      // Más personas que la capacidad no puede ocurrir con el control: se fuerza a mano.
+      setValue($('#calc-people'), 12);
+      assert($('#calcPeopleOutput').textContent === '12', 'el contador debe actualizarse');
+    });
+
+    await test('salida anterior a la llegada muestra una advertencia y no un precio', async () => {
+      const day = nextWeekday(2, 20);
+      setValue($('#calc-date'), day);
+      const before = iso(new Date(new Date(day + 'T12:00:00').getTime() - 86400000));
+      setValue($('#calc-departure'), before);
+      assert($('#calcResult .calc-warning'), 'debía advertirse');
+      assert(!$('#calcResult .result-total'), 'no debe mostrarse total');
+      await closeAll();
+    });
+
+    await test('la salida es opcional: sin salida se cotiza un pasadía y con salida, noches', async () => {
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(60);
+      assert($('#calc-departure').value, 'por defecto hay llegada y salida');
+      assert(/noche/i.test($('#calcResult').textContent), 'con salida se cotizan noches');
+      $('[data-action="clear-departure"]').click();
+      assert($('#calc-departure').value === '', 'la salida debía quedar vacía');
+      assert(/Pasadía por persona/.test($('#calcResult').textContent), 'sin salida debe ser un pasadía');
+      assert(/persona/.test($('#modalPriceValue').textContent) && !/noche/.test($('#modalPriceValue').textContent), 'el precio de cabecera debe pasar a pasadía');
+      assert(!$('[data-action="set-mode"]'), 'no debe haber selector manual de tipo de plan');
+      const day = nextWeekday(3, 15);
+      setValue($('#calc-date'), day);
+      setValue($('#calc-departure'), day);
+      assert(/Pasadía por persona/.test($('#calcResult').textContent), 'salida igual a la llegada también es un pasadía de un día');
+      setValue($('#calc-departure'), iso(new Date(new Date(day + 'T12:00:00').getTime() + 2 * 86400000)));
+      assert(/noche/i.test($('#calcResult').textContent), 'una salida posterior vuelve a cotizar noches');
+      await closeAll();
+      // En una propiedad solo de alojamiento, la salida es obligatoria.
+      const original = config.properties[0].categories;
+      config.properties[0].categories = ['alojamiento'];
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(60);
+      setValue($('#calc-departure'), '');
+      assert(/salida/i.test($('#calcResult .calc-warning').textContent), 'sin salida debe pedirse la salida');
+      config.properties[0].categories = original;
+      await closeAll();
+    });
+
+    const plusDay = (isoDate, n) => iso(new Date(new Date(isoDate + 'T12:00:00').getTime() + n * 86400000));
+    await test('al elegir la llegada, la salida se preselecciona el día siguiente', async () => {
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(60);
+      const day = nextWeekday(4, 40);
+      setValue($('#calc-date'), day);
+      assert($('#calc-departure').value === plusDay(day, 1), 'la salida debía quedar en el día siguiente: ' + $('#calc-departure').value);
+      assert(/1 noche/.test($('#calcResult').textContent), 'una noche en el desglose');
+      $('.cell-clear').click();
+      assert($('#calc-departure').value === '', 'salida vacía');
+      $('#calc-departure').dispatchEvent(new win.Event('pointerdown', { bubbles: true }));
+      assert($('#calc-departure').value === plusDay(day, 1), 'al tocar la salida vacía se preselecciona el día siguiente');
+      assert($('#calc-departure').min === day, 'con pasadía disponible la salida puede ser el mismo día');
+      await closeAll();
+      // En una propiedad solo de alojamiento la salida nunca queda vacía y siempre es posterior.
+      const original = config.properties[0].categories;
+      config.properties[0].categories = ['alojamiento'];
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(60);
+      assert($('#calc-departure').min === plusDay($('#calc-date').value, 1), 'la salida mínima es el día siguiente a la llegada');
+      setValue($('#calc-departure'), '');
+      setValue($('#calc-date'), plusDay(day, 3));
+      assert($('#calc-departure').value === plusDay(day, 4), 'sin salida, al elegir la llegada se completa con el día siguiente');
+      config.properties[0].categories = original;
+      await closeAll();
+    });
+
+    await test('al mover la llegada se conserva la duración de la estancia', async () => {
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(60);
+      const start = nextWeekday(1, 30);
+      const end = iso(new Date(new Date(start + 'T12:00:00').getTime() + 3 * 86400000));
+      setValue($('#calc-date'), start); setValue($('#calc-departure'), end);
+      const later = iso(new Date(new Date(end + 'T12:00:00').getTime() + 5 * 86400000));
+      setValue($('#calc-date'), later);
+      const nights = win.DemoPricing.nightsBetween($('#calc-date').value, $('#calc-departure').value);
+      assert(nights === 3, 'la estancia debía seguir siendo de 3 noches y es de ' + nights);
+      await closeAll();
+    });
+
+    await test('la ficha muestra un reel vertical, miniaturas y solo el municipio', async () => {
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(80);
+      const stage = $('#modalStage').getBoundingClientRect();
+      assert(stage.height > stage.width * 1.6, `el reel debe ser vertical (9:16), mide ${stage.width}×${stage.height}`);
+      assert($$('.gallery-thumb').length === 1 + config.properties[0].gallery.length, 'reel + fotos en la tira');
+      assert(!$('.location-sample'), 'no debe haber mapa');
+      const city = config.properties[0].city;
+      const meta = $('.pm-meta').textContent;
+      assert(meta.includes(city), 'debe mostrar la ubicación: ' + meta);
+      const rest = config.properties[0].location.split(',').slice(1).join(',').trim();
+      assert(!rest || !meta.includes(rest), 'solo el municipio, sin ' + rest);
+      assert($$('.fact').length === config.properties[0].facts.length, 'una tarjeta por dato clave');
+      assert($$('.amenity').length === config.properties[0].amenities.length, 'una etiqueta por amenidad');
+      assert($$('.amenity use').every(u => doc.querySelector(u.getAttribute('href'))), 'cada amenidad debe tener un icono existente en el sprite');
+      const order = ['.pm-meta', '.facts', '.amenities', '.calculator'].map(sel => $(sel).getBoundingClientRect().top);
+      assert(order.every((top, i) => i === 0 || top > order[i - 1]), 'orden: ubicación → datos clave → amenidades → calculadora');
+      assert($('#modalStage video source').getAttribute('src') === config.properties[0].videoUrl, 'con videoUrl debe usarse un <video> con ese reel');
+      $$('.gallery-thumb')[2].click();
+      assert($('#modalStage').classList.contains('is-photo') && $('#modalStage img'), 'una foto debe mostrarse en el escenario');
+      $$('.gallery-thumb')[0].click();
+      assert($('#modalStage video'), 'el primer botón debe volver al reel');
+      const savedVideo = config.properties[0].videoUrl;
+      config.properties[0].videoUrl = '';
+      $('[data-action="close-modal"]').click();
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(80);
+      assert(!$('#modalStage video') && $('.reel-badge'), 'sin videoUrl debe verse el marcador del reel');
+      config.properties[0].videoUrl = savedVideo;
+      await closeAll();
+    });
+
+    await test('todas las propiedades piden Llegada y Salida, sin la palabra «opcional»', async () => {
+      for (const property of config.properties) {
+        $(`[data-open-property="${property.id}"]`).click();
+        await sleep(30);
+        assert($('label[for="calc-date"]').textContent === 'Llegada', property.name + ': falta «Llegada»');
+        assert($('label[for="calc-departure"]').textContent === 'Salida', property.name + ': falta «Salida» o dice ' + ($('label[for="calc-departure"]') || {}).textContent);
+        assert(!/opcional/i.test($('.calculator').textContent), property.name + ': aparece «opcional»');
+        assert($('#calc-departure').value >= $('#calc-date').value, property.name + ': la salida no puede ser anterior a la llegada');
+        await closeAll();
+      }
+    });
+
+    await test('un pasadía de un solo día (Villa Cristal) cotiza con salida igual a la llegada y deriva si son varios días', async () => {
+      $('[data-open-property="villa-cristal"]').click();
+      await sleep(30);
+      assert($('#calc-departure').value === $('#calc-date').value, 'por defecto la salida es el mismo día');
+      assert(/Pasadía por persona/.test($('#calcResult').textContent), 'cotiza el pasadía');
+      const day = $('#calc-date').value;
+      setValue($('#calc-departure'), plusDay(day, 2));
+      assert(/un solo día/i.test($('#calcResult .calc-warning').textContent), 'varios días → cotización a medida');
+      setValue($('#calc-date'), plusDay(day, 5));
+      assert($('#calc-departure').min === $('#calc-date').value, 'la salida mínima es la llegada');
+      await closeAll();
+    });
+
+    await test('el cotizador se llama «Cotiza tu plan» y no muestra avisos ni selectores intrusos', async () => {
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(60);
+      assert($('.calc-title').textContent === 'Cotiza tu plan', 'título: ' + $('.calc-title').textContent);
+      assert(!$('.stay-hint') && !$('.hint-button') && !$('.hint-chip') && !$('[data-action="set-mode"]'), 'no debe haber avisos de pasadía ni selector de tipo');
+      const clear = $('.cell-clear');
+      assert(clear && !clear.hidden, 'con salida debe verse el botón de quitarla');
+      clear.click();
+      assert(clear.hidden && $('#calc-departure').value === '', 'al quitarla el botón se oculta');
+      await closeAll();
+    });
+
+    const chatSubmit = async text => {
+      const input = $('#chatInput');
+      input.value = text;
+      $('#chatForm').dispatchEvent(new win.Event('submit', { bubbles: true, cancelable: true }));
+      await sleep(40);
+    };
+    const lastBubble = () => $$('#chatBody .bubble').filter(b => !b.classList.contains('bubble-typing')).pop().textContent;
+    const step = () => $('#chatForm').dataset.step;
+    /** Cada prueba parte de una conversación nueva: se borra la que haya (dos toques) y se abre el chat. */
+    const resetChat = () => { const b = $('[data-action="chat-reset"]'); if (b) { b.click(); b.click(); } };
+    const openChat = async () => { resetChat(); $('[data-action="contact"]').click(); await sleep(80); };
+
+    await test('«Consultar disponibilidad» abre el chat con la tarjeta del plan y la ficha queda detrás', async () => {
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(60);
+      const arrive = nextWeekday(2, 25);
+      const leave = iso(new Date(new Date(arrive + 'T12:00:00').getTime() + 2 * 86400000));
+      setValue($('#calc-date'), arrive); setValue($('#calc-departure'), leave);
+      resetChat();
+      $('.calculator [data-action="request-quote"]').click();
+      await sleep(80);
+      assert($('#contactModal').classList.contains('is-open') && $('.chat-panel'), 'el chat debía abrirse');
+      assert($('#propertyModal').classList.contains('is-open'), 'la ficha debe seguir abierta detrás');
+      assert(!$('#contactMode') && !$('#contactDate') && !$('#contactPeople'), 'no se vuelve a pedir ni a editar el plan');
+      const card = $('.bubble-me .plan-card');
+      assert(card && card.textContent.includes('Casa Karkinos') && /Total estimado/.test(card.textContent), 'la tarjeta del plan debe ir como mensaje enviado: ' + (card || {}).textContent);
+      assert(step() === 'name', 'con un plan solo falta el nombre: paso ' + step());
+      $('.chat-close').click();
+      assert(!$('#contactModal').classList.contains('is-open') && $('#propertyModal').classList.contains('is-open'), 'cerrar el chat regresa a la ficha');
+      assert($('#calc-date').value === arrive && $('#calc-departure').value === leave, 'la calculadora conserva lo que elegiste');
+      await closeAll();
+    });
+
+    await test('el chat saluda y ofrece respuestas rápidas; el asistente recomienda por capacidad y ubicación', async () => {
+      await openChat();
+      assert(!$('.plan-card') && $$('.bubble-agent').length >= 2, 'el asesor saluda con dos mensajes');
+      assert($('.chat-head').textContent.includes('Luisito el Viajero') && /en línea/.test($('.chat-status').textContent), 'cabecera con nombre y estado');
+      assert(step() === 'chat' && $$('.chat-chip').length === 4, 'cuatro respuestas rápidas al inicio');
+      $$('.chat-chip').find(c => /Cotizar un plan/.test(c.textContent)).click();
+      await sleep(60);
+      assert(/cuántas personas/i.test(lastBubble()), 'pregunta el número de personas: ' + lastBubble());
+      await chatSubmit('Somos 12 en Coveñas del 20 al 22 de noviembre');
+      const names = $$('.mini-card strong').map(e => e.textContent);
+      assert(names.includes('Casa Aledam') && names.every(n => ['Casa Aledam', 'Los Flamencos'].includes(n)), 'solo cabañas de Coveñas con capacidad: ' + names);
+      assert($$('.mini-card .mini-price').every(e => /Estimado \$/.test(e.textContent)), 'con fechas cada tarjeta trae un valor estimado');
+      assert($$('.mini-actions button').every(b => b.offsetHeight >= 44), 'botones táctiles de al menos 44 px');
+      $('.mini-card [data-action="chat-quick"]').click();
+      await sleep(60);
+      const quote = $('.quote-card');
+      assert(quote && quote.textContent.includes('Casa Aledam') && /Total estimado/.test(quote.textContent) && /Anticipo \(30 %\)/.test(quote.textContent), 'la cotización aparece como tarjeta: ' + (quote || {}).textContent);
+      assert(/no la puedo confirmar|asesor/i.test($$('.bubble-agent').slice(-1)[0].textContent), 'aclara que la disponibilidad la confirma un asesor');
+      assert($('.chat-chip.is-primary') && /WhatsApp/.test($('.chat-chip.is-primary').textContent), 'ofrece continuar en WhatsApp');
+      await closeAll();
+    });
+
+    await test('el asistente responde preguntas frecuentes y deriva al asesor lo que no sabe', async () => {
+      await openChat();
+      await chatSubmit('¿Cómo funciona el anticipo?');
+      assert(/30 %/.test(lastBubble()), 'responde el anticipo: ' + lastBubble());
+      await chatSubmit('¿Dónde queda Casa Mare?');
+      assert(/Cartagena/.test(lastBubble()) && !/Bolívar/.test(lastBubble()), 'solo el municipio: ' + lastBubble());
+      await chatSubmit('¿Tiene piscina Villa Cristal?');
+      assert(/Sí, Villa Cristal cuenta con piscina/.test(lastBubble()), lastBubble());
+      await chatSubmit('¿Aceptan mascotas?');
+      assert(/asesor/i.test(lastBubble()) && $('.chat-chip.is-primary'), 'lo que no sabe se deriva con un botón a WhatsApp');
+      await chatSubmit('blabla qwerty zxcv');
+      assert(/Toca el botón|asesor/i.test(lastBubble()) && $('.chat-chip.is-primary'), 'sin respuesta: invita a continuar en WhatsApp');
+      assert(step() === 'chat', 'la persona puede seguir escribiendo');
+      await closeAll();
+    });
+
+    await test('al pasar a WhatsApp pide nombre y celular con validación, y luego la autorización', async () => {
+      await openChat();
+      await chatSubmit('¿Aceptan mascotas?');
+      $('.chat-chip.is-primary').click();
+      await sleep(60);
+      assert(step() === 'name', 'primero el nombre: ' + step());
+      await chatSubmit('A');
+      assert(step() === 'name' && /nombre completo/i.test(lastBubble()), 'nombre corto: se vuelve a pedir');
+      await chatSubmit('Ana Prueba');
+      assert(step() === 'phone' && lastBubble().includes('Ana'), 'saluda por el nombre y pide el celular');
+      await chatSubmit('123');
+      assert(step() === 'phone' && /número/i.test(lastBubble()), 'celular corto: se vuelve a pedir');
+      await chatSubmit('300 123 4567');
+      assert(step() === 'consent' && $('[data-action="chat-consent"]') && $('#chatInput').disabled, 'al final solo queda autorizar');
+      assert($$('.bubble-me .tick').length >= 4, 'los mensajes enviados llevan doble check');
+      await closeAll();
+    });
+
+    await test('el chat muestra «escribiendo…» antes de cada mensaje del asesor y se detiene si se cierra', async () => {
+      config.brand.chatTypingMs = 250;
+      await openChat();
+      assert($('.bubble-typing') && $$('.bubble-agent:not(.bubble-typing)').length === 0, 'primero se ve el indicador');
+      assert($('#chatInput').disabled, 'no se puede escribir mientras el asesor responde');
+      await sleep(700);
+      assert(!$('.bubble-typing') && $$('.bubble-agent').length >= 1, 'luego aparece el mensaje');
+      config.brand.chatTypingMs = 0;
+      await closeAll();
+    });
+
+    await test('al cerrar el chat con el asesor escribiendo, la respuesta llega igual y el botón avisa', async () => {
+      config.brand.chatTypingMs = 250;
+      await openChat();
+      await sleep(900);
+      assert(step() === 'chat', 'el saludo debe haber terminado: ' + step());
+      await chatSubmit('¿Cómo funciona el anticipo?');
+      $('.chat-close').click();
+      assert(!$('#contactModal').classList.contains('is-open'), 'la ventana se cerró');
+      await sleep(700);
+      assert(!$('#waBadge').hidden, 'el botón de WhatsApp debe marcar que hay una respuesta nueva');
+      assert(/respuesta nueva/i.test($('#waLabel').textContent), 'texto del botón: ' + $('#waLabel').textContent);
+      $('#waFab').click();
+      await sleep(80);
+      assert(/30 %/.test(lastBubble()), 'la respuesta llegó mientras estaba cerrado: ' + lastBubble());
+      assert($('#waBadge').hidden && /Continuar tu conversación/.test($('#waLabel').textContent), 'al reabrir se limpia el aviso');
+      config.brand.chatTypingMs = 0;
+      await closeAll();
+    });
+
+    await test('la conversación se conserva al ir a una ficha y volver, y sigue con el mismo contexto', async () => {
+      await openChat();
+      await chatSubmit('Somos 12 en Coveñas del 20 al 22 de noviembre');
+      const before = $$('#chatBody .bubble').length;
+      assert($('.mini-card'), 'se recomendaron cabañas');
+      $('.mini-card [data-action="chat-open-property"]').click();
+      await sleep(80);
+      assert(!$('#contactModal').classList.contains('is-open') && $('#propertyModal').classList.contains('is-open'), 'se abrió la ficha');
+      await closeAll();
+      $('#waFab').click();
+      await sleep(80);
+      assert($('#contactModal').classList.contains('is-open') && $$('#chatBody .bubble').length === before, 'retoma exactamente donde quedó');
+      assert(step() === 'chat' && $('.chat-chip.is-primary') && !$('#chatInput').disabled, 'puede seguir escribiendo y conserva sus respuestas rápidas');
+      await chatSubmit('cotizar Casa Aledam');
+      assert($('.quote-card') && /Casa Aledam/.test($('.quote-card').textContent), 'recuerda las personas y las fechas y cotiza sin volver a preguntar');
+      await closeAll();
+    });
+
+    await test('la conversación sobrevive a recargar la página y caduca a las 24 horas', async () => {
+      const stored = JSON.parse(win.localStorage.getItem('luisito:chat'));
+      assert(stored && stored.log.length > 3 && stored.step === 'chat', 'debe estar guardada en el navegador');
+      const again = await loadApp(1280);
+      await sleep(300);
+      const adoc = again.contentDocument;
+      assert(adoc.querySelectorAll('#chatBody .bubble').length === stored.log.filter(e => e.kind !== 'actions').length, 'se restauran todas las burbujas');
+      assert(adoc.querySelector('.quote-card') && adoc.querySelector('.mini-card'), 'tarjetas y cotizaciones también');
+      assert(/Continuar tu conversación/.test(adoc.querySelector('#waLabel').textContent), 'el botón invita a continuar');
+      adoc.querySelector('#waFab').click();
+      await sleep(80);
+      assert(adoc.querySelector('#chatForm').dataset.step === 'chat' && !adoc.querySelector('#chatInput').disabled, 'puede seguir escribiendo');
+      again.remove();
+      stored.savedAt = Date.now() - 25 * 3600 * 1000;
+      win.localStorage.setItem('luisito:chat', JSON.stringify(stored));
+      const old = await loadApp(1280);
+      await sleep(300);
+      assert(!old.contentDocument.querySelector('#chatBody .bubble'), 'una conversación de más de 24 horas no se restaura');
+      assert(win.localStorage.getItem('luisito:chat') === null, 'y se borra del navegador');
+      old.remove();
+    });
+
+    await test('«Borrar» pide un segundo toque y limpia la conversación y el navegador', async () => {
+      await openChat();
+      await chatSubmit('hola');
+      assert(win.localStorage.getItem('luisito:chat'), 'se guarda al hablar');
+      const button = $('[data-action="chat-reset"]');
+      button.click();
+      assert(button.classList.contains('is-armed') && $$('#chatBody .bubble-me').length === 1, 'el primer toque solo arma el botón');
+      button.click();
+      await sleep(80);
+      assert(win.localStorage.getItem('luisito:chat') === null && $$('#chatBody .bubble-me').length === 0 && step() === 'chat', 'el segundo toque empieza de cero');
+      await closeAll();
+    });
+
+    await test('la ficha de evento deriva a cotización manual', async () => {
+      $('[data-open-property="los-canaguates"]').click();
+      await sleep(60);
+      assert($('#calcResult .calc-warning'), 'los eventos requieren cotización manual');
+      assert(/Solicitar cotización/.test($('[data-action="request-quote"]').textContent), 'el botón debe decir Solicitar cotización');
+      await closeAll();
+    });
+
+    await test('el modal atrapa el foco con Tab y Shift+Tab', async () => {
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(80);
+      const modal = $('#propertyModal');
+      const focusable = $$('button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href]', modal).filter(el => !el.closest('[hidden]') && el.getClientRects().length > 0);
+      focusable[focusable.length - 1].focus();
+      doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }));
+      assert(doc.activeElement === focusable[0], 'Tab desde el último debe volver al primero');
+      doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }));
+      assert(doc.activeElement === focusable[focusable.length - 1], 'Shift+Tab desde el primero debe ir al último');
+      await closeAll();
+    });
+
+    /** Recorre la conversación hasta el final: pide un asesor, da nombre y celular y autoriza. */
+    async function fillContact({ question = '', name = 'Ana Prueba', phone = '300 123 4567', website, consent = true } = {}) {
+      if (step() === 'chat') {
+        if (question) { await chatSubmit(question); $('.chat-chip.is-primary').click(); await sleep(40); }
+        else await chatSubmit('quiero hablar con un asesor');
+      }
+      await chatSubmit(name);
+      await chatSubmit(phone);
+      if (website !== undefined) setValue($('input[name="website"]'), website);
+      if (consent) $('[data-action="chat-consent"]').click();
+    }
+    const submitContact = async () => { await sleep(150); };
+    const goWhatsApp = async () => { $('[data-action="chat-whatsapp"]').click(); await sleep(120); };
+
+    // El portapapeles real depende de permisos y del foco del navegador: se sustituye para que la prueba sea determinista.
+    const useClipboard = writeText => Object.defineProperty(win.navigator, 'clipboard', { value: { writeText }, configurable: true });
+    useClipboard(async () => {});
+
+    await test('tras autorizar: muestra el mensaje personalizado y el botón «Continuar en WhatsApp»; sin número copia el mensaje', async () => {
+      await openChat();
+      await fillContact();
+      await submitContact();
+      const preview = $('.bubble-preview');
+      assert(preview && /Así llegará tu mensaje/.test(preview.textContent), 'se ve el mensaje tal como llegará');
+      assert(/Hola, soy Ana Prueba\. Quisiera hacer una reserva\./.test(preview.textContent), 'sin pregunta pendiente: «Quisiera hacer una reserva»: ' + preview.textContent);
+      assert(/Mi celular: 300 123 4567/.test(preview.textContent), 'incluye el celular');
+      assert($('.chat-actions [data-action="chat-whatsapp"]') && $('.chat-actions [data-action="copy-again"]'), 'botones de WhatsApp y copiar');
+      assert(!$('#contactModal a[href^="mailto:"]'), 'sin leadEmail no debe haber enlace de correo');
+      assert($('.chat-actions').dataset.message.includes('Ana Prueba'), 'el mensaje debe incluir el nombre');
+      await goWhatsApp();
+      assert(/copié tu mensaje|configurado/i.test($('#toast').textContent), 'sin número configurado se copia y se avisa: ' + $('#toast').textContent);
+      await closeAll();
+    });
+
+    await test('si el portapapeles nunca responde, el botón de WhatsApp no deja la interfaz bloqueada', async () => {
+      useClipboard(() => new Promise(() => {})); // promesa que jamás se resuelve
+      await openChat();
+      await fillContact();
+      await submitContact();
+      $('[data-action="chat-whatsapp"]').click();
+      await sleep(2200); // supera el tiempo límite del portapapeles
+      const ok = /configurado|copié/i.test($('#toast').textContent);
+      useClipboard(async () => {});
+      assert(ok, 'tras el tiempo límite debe avisar: ' + $('#toast').textContent);
+      await closeAll();
+    });
+
+    await test('la pregunta que el asistente no pudo responder viaja en el mensaje de WhatsApp', async () => {
+      await openChat();
+      await fillContact({ question: '¿Aceptan mascotas pequeñas?' });
+      await submitContact();
+      const preview = $('.bubble-preview').textContent;
+      assert(/Tengo esta consulta: «¿Aceptan mascotas pequeñas\?»/.test(preview), 'la consulta va tal como la escribió: ' + preview);
+      assert(!/Quisiera hacer una reserva/.test(preview), 'con una consulta concreta no se usa el mensaje genérico');
+      await closeAll();
+    });
+
+    await test('el mensaje de WhatsApp incluye lo conversado: cabaña, fechas, personas, ubicación y valor estimado', async () => {
+      await openChat();
+      await chatSubmit('Somos 12 en Coveñas del 20 al 22 de noviembre');
+      $('.mini-card [data-action="chat-quick"]').click();
+      await sleep(60);
+      await fillContact();
+      await submitContact();
+      const preview = $('.bubble-preview').textContent;
+      assert(/Cabaña: Casa Aledam/.test(preview) && /Personas: 12/.test(preview) && /Fechas: 20 de nov – 22 de nov \(2 noches\)/.test(preview) && /Ubicación: Coveñas/.test(preview) && /Valor estimado: \$\s?[\d.]+/.test(preview), 'detalles del plan: ' + preview);
+      await closeAll();
+    });
+
+    await test('con leadEmail ofrece «Enviar por correo» con el mensaje codificado', async () => {
+      config.brand.leadEmail = 'reservas@ejemplo.test';
+      await openChat();
+      await fillContact({ name: 'Ana & Luis' });
+      await submitContact();
+      const link = $('#contactModal a[href^="mailto:"]');
+      assert(link, 'falta el enlace mailto');
+      assert(link.getAttribute('href').startsWith('mailto:reservas@ejemplo.test?subject='), 'destinatario incorrecto');
+      assert(link.getAttribute('href').includes(encodeURIComponent('Ana & Luis')), 'el cuerpo debe ir codificado');
+      config.brand.leadEmail = '';
+      await closeAll();
+    });
+
+    await test('con endpoint: envía JSON por POST (con la consulta) y el honeypot bloquea bots', async () => {
+      config.brand.leadsEndpoint = 'https://leads.ejemplo.test/api';
+      const calls = [];
+      win.fetch = async (url, options) => { calls.push({ url, options }); return { ok: true }; };
+      await openChat();
+      assert($('input[name="website"]'), 'con endpoint debe existir el campo trampa');
+      await fillContact({ question: '¿Aceptan mascotas?' });
+      await submitContact();
+      assert(calls.length === 1, 'se esperaba 1 envío, hubo ' + calls.length);
+      const body = JSON.parse(calls[0].options.body);
+      assert(calls[0].options.method === 'POST' && body.name === 'Ana Prueba' && body.consent === true, 'carga útil incorrecta');
+      assert(/mascotas/.test(body.note), 'la consulta viaja en la solicitud: ' + body.note);
+      assert(!('website' in body), 'el honeypot no debe viajar en la carga');
+      await closeAll();
+
+      await openChat();
+      await fillContact({ website: 'http://spam.test' });
+      await submitContact();
+      assert(calls.length === 1, 'un bot no debe provocar un envío');
+      await closeAll();
+    });
+
+    await test('si el endpoint falla, el mensaje sigue disponible para continuar en WhatsApp', async () => {
+      win.fetch = async () => { throw new Error('sin red'); };
+      await openChat();
+      await fillContact();
+      await submitContact();
+      assert($('[data-action="chat-whatsapp"]') && $('[data-action="copy-again"]'), 'debe poder continuarse aunque falle el envío');
+      config.brand.leadsEndpoint = '';
+      await closeAll();
+    });
+
+    await test('con WhatsApp configurado, el botón abre wa.me con el mensaje personalizado', async () => {
+      config.brand.whatsappNumber = '573001234567';
+      let opened = null;
+      win.open = (url, target, features) => { opened = { url, target, features }; return null; };
+      await openChat();
+      await fillContact({ question: '¿Aceptan mascotas?' });
+      await submitContact();
+      assert(!opened, 'no debe abrir WhatsApp hasta que la persona toque el botón');
+      await goWhatsApp();
+      assert(opened && opened.url.startsWith('https://wa.me/573001234567?text='), 'URL de WhatsApp incorrecta');
+      assert(opened.url.includes(encodeURIComponent('Hola, soy Ana Prueba.')) && opened.url.includes(encodeURIComponent('¿Aceptan mascotas?')), 'el mensaje personalizado debe ir codificado');
+      assert(/noopener/.test(opened.features), 'debe abrir con noopener');
+      config.brand.whatsappNumber = '';
+      await closeAll();
+    });
+
+    await test('un plan elegido en una ficha se suma a la conversación en curso sin volver a pedir los datos', async () => {
+      await openChat();
+      await fillContact();
+      await submitContact();
+      assert($$('.bubble-preview').length === 1, 'primer mensaje de WhatsApp listo');
+      await closeAll();
+      $('[data-open-property="casa-karkinos"]').click();
+      await sleep(60);
+      $('.calculator [data-action="request-quote"]').click();
+      await sleep(300);
+      assert($('.bubble-me .plan-card') && /Casa Karkinos/.test($('.bubble-me .plan-card').textContent), 'el plan se suma como mensaje');
+      assert($$('.bubble-preview').length === 2 && /Cabaña: Casa Karkinos/.test($$('.bubble-preview')[1].textContent), 'se arma un segundo mensaje con el nuevo plan');
+      assert($$('.bubble-agent').filter(b => /cómo te llamas/.test(b.textContent)).length === 1, 'no vuelve a preguntar el nombre');
+      assert($$('[data-action="chat-whatsapp"]').length === 2, 'cada mensaje tiene su botón');
+      await closeAll();
+    });
+
+    await test('el menú móvil alterna aria-expanded', () => {
+      const toggle = $('#menuToggle');
+      toggle.click();
+      assert(toggle.getAttribute('aria-expanded') === 'true', 'debía abrirse');
+      toggle.click();
+      assert(toggle.getAttribute('aria-expanded') === 'false', 'debía cerrarse');
+    });
+
+    frame.remove();
+    await test('en 390 px no hay desbordamiento horizontal', async () => {
+      const mobile = await loadApp(390);
+      await sleep(200);
+      const root = mobile.contentDocument.documentElement;
+      assert(root.scrollWidth <= root.clientWidth + 1, `scrollWidth ${root.scrollWidth} > clientWidth ${root.clientWidth}`);
+      mobile.remove();
+    });
+
+    await test('en móvil: objetivos táctiles ≥ 44 px, texto ≥ 12 px y campos a 16 px', async () => {
+      const mobile = await loadApp(390);
+      await sleep(250);
+      const mdoc = mobile.contentDocument;
+      const mwin = mobile.contentWindow;
+      const visible = el => { const r = el.getBoundingClientRect(); const s = mwin.getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && !el.closest('.hp-field'); };
+      const describe = el => (el.getAttribute('aria-label') || el.textContent || el.tagName).trim().slice(0, 28);
+      // Se abren la ficha y el formulario para medir también lo que hay dentro de las ventanas.
+      const measure = () => {
+        const bad = [];
+        mdoc.querySelectorAll('a[href], button, summary, select, input:not([type=hidden]):not([type=range])').forEach(el => {
+          if (!visible(el)) return;
+          const r = el.getBoundingClientRect();
+          const inline = el.tagName === 'A' && el.closest('p, li');
+          const checkbox = el.type === 'checkbox';
+          if (!inline && !checkbox && (r.height < 43.5 || r.width < 43.5)) bad.push(`táctil ${describe(el)} ${Math.round(r.width)}×${Math.round(r.height)}`);
+        });
+        mdoc.querySelectorAll('body *').forEach(el => {
+          if (!visible(el) || !([...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))) return;
+          const size = parseFloat(mwin.getComputedStyle(el).fontSize);
+          if (size < 12) bad.push(`texto ${size}px «${describe(el)}»`);
+        });
+        mdoc.querySelectorAll('input:not([type=hidden]):not([type=checkbox]), select, textarea').forEach(el => {
+          if (visible(el) && parseFloat(mwin.getComputedStyle(el).fontSize) < 16) bad.push(`campo ${el.id || el.name} a ${mwin.getComputedStyle(el).fontSize}`);
+        });
+        return bad;
+      };
+      let problems = measure();
+      mwin.scrollTo(0, 3000); mwin.dispatchEvent(new mwin.Event('scroll')); await sleep(300);
+      problems = problems.concat(measure());
+      mwin.scrollTo(0, 0);
+      mdoc.querySelector('[data-open-property="casa-karkinos"]').click();
+      await sleep(200);
+      problems = problems.concat(measure());
+      mdoc.querySelector('.pm-bar [data-action="request-quote"]').click();
+      await sleep(200);
+      problems = problems.concat(measure());
+      mobile.remove();
+      assert(problems.length === 0, [...new Set(problems)].slice(0, 6).join(' | '));
+    });
+
+    const summary = document.getElementById('summary');
+    const ok = failures.length === 0;
+    summary.textContent = ok ? `SMOKE-PASS · ${passed} comprobaciones correctas` : `SMOKE-FAIL · ${failures.length} fallo(s): ${failures.join('; ')}`;
+    summary.className = ok ? 'pass' : 'fail';
+    document.title = ok ? 'SMOKE-PASS' : 'SMOKE-FAIL';
+  })();
+  </script>
+</body>
+</html>

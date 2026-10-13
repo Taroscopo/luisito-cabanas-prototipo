@@ -1,0 +1,7 @@
+# Local / herramientas
+.claude/
+tests/chrome-profile-tmp/
+__pycache__/
+*.pyc
+.DS_Store
+*.log

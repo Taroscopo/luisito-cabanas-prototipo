@@ -1,0 +1,9 @@
+# MODO DEMO: el sitio contiene propiedades y precios ficticios, por eso se bloquea la indexación.
+# AL LANZAR: sustituir por las líneas de abajo y quitar <meta name="robots" content="noindex"> de index.html.
+#
+#   User-agent: *
+#   Allow: /
+#   Sitemap: https://TU-DOMINIO/sitemap.xml
+
+User-agent: *
+Disallow: /

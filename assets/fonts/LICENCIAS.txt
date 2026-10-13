@@ -1,0 +1,9 @@
+Fuentes incluidas (subconjunto latino, formato WOFF2), descargadas de Google Fonts el 2026-10-12.
+Se publica bajo la SIL Open Font License 1.1 (https://openfontlicense.org), que permite uso comercial,
+alojamiento propio y redistribución con la fuente.
+
+- DM Sans — Colophon Foundry / Indian Type Foundry. https://fonts.google.com/specimen/DM+Sans
+- Cormorant Garamond (redonda y cursiva) — Christian Thalmann / Catharsis Fonts. https://fonts.google.com/specimen/Cormorant+Garamond
+
+Iconos de la interfaz: Phosphor Icons (https://phosphoricons.com), licencia MIT, variante «regular». Se incluyen como marcado SVG
+en el sprite de index.html; no hay peticiones a terceros en tiempo de ejecución.
