@@ -317,10 +317,12 @@
     currentEstimate = null;
     const price = modalPrice(property, activeMode);
     setHtml(propertyModal, html`<section class="modal-panel property-panel" role="dialog" aria-modal="true" aria-labelledby="propertyModalTitle">
-      <div class="pm-topbar"><span class="pm-topbar-title">${property.name}</span><button class="modal-close" data-action="close-modal" aria-label="Cerrar ficha">${icon('x')}</button></div>
       <div class="pm-grid">
         <div class="pm-media">
-          <div class="pm-stage" id="modalStage">${reelTemplate(property)}</div>
+          <div class="pm-stage-wrap">
+            <div class="pm-stage" id="modalStage">${reelTemplate(property)}</div>
+            <button class="modal-close" data-action="close-modal" aria-label="Cerrar ficha">${icon('x')}</button>
+          </div>
           ${galleryStripTemplate(property)}
         </div>
         <div class="pm-info">

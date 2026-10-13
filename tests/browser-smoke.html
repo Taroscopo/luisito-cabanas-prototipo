@@ -164,7 +164,7 @@
       }
     });
 
-    await test('reel: sin controles nativos, botón propio de sonido y pausa, y la X de cerrar fuera del video en móvil', async () => {
+    await test('reel: sin controles nativos, botón propio de sonido y pausa, y la X de cerrar dentro del reel, arriba a la derecha (móvil)', async () => {
       $('[data-open-property="casa-karkinos"]').click();
       await sleep(120);
       const video = $('#modalStage video');
@@ -184,8 +184,9 @@
       await sleep(200);
       const rect = sel => mdoc.querySelector(sel).getBoundingClientRect();
       const stage = rect('#modalStage'), close = rect('.modal-close'), snd = rect('.reel-sound');
-      assert(close.bottom <= stage.top + 1, `la X (hasta ${Math.round(close.bottom)}) debe quedar sobre el reel (desde ${Math.round(stage.top)})`);
-      assert(snd.bottom <= stage.bottom + 1 && snd.right <= stage.right + 1 && snd.top > close.bottom, 'el botón de sonido queda dentro del reel y libre');
+      assert(close.top >= stage.top && close.right <= stage.right + 1 && close.left > stage.left + stage.width / 2, 'la X va dentro del reel, arriba a la derecha');
+      assert(snd.bottom <= stage.bottom + 1 && snd.right <= stage.right + 1 && snd.top > close.bottom + 100, 'el botón de sonido queda abajo, lejos de la X');
+      assert(!mdoc.querySelector('.pm-topbar'), 'sin barra superior: solo queda el botón de cerrar');
       const ratio = stage.height / stage.width;
       assert(ratio >= 1.5 && ratio <= 1.8, `el reel debe ser alargado pero no tanto como la pantalla, proporción ${ratio.toFixed(2)}`);
       mobile.remove();

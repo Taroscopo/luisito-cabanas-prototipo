@@ -100,7 +100,7 @@ Con los tres vacíos el prototipo no envía datos a ningún sitio. No hay pagos,
 
 - **Paginación:** el catálogo muestra 9 cabañas por página (`brand.pageSize` en `data.js`) con «Anterior · 1 2 3 · Siguiente» (en móvil, «Página 2 de 3»). Al cambiar de página se vuelve al inicio del catálogo; al filtrar por ubicación o abrir favoritos se empieza en la página 1. Las fichas, el chat y las favoritas funcionan con las 19 aunque no estén en la página visible.
 - **Reel con sonido:** al abrir una ficha el reel arranca con audio dentro del mismo toque, que es lo que permiten los navegadores. Si el navegador lo bloquea, arranca en silencio y aparece el botón «Activar sonido». Hay controles propios (pausa y sonido) y barra de progreso; no se usan los controles nativos. Tocar el video también lo pausa. El reel se pausa al abrir el chat, al cerrar la ficha y al cambiar de pestaña.
-- **Cierre de la ficha:** en móvil la ficha tiene una barra superior con el nombre y la X, fuera del video, para que nada tape los botones del reel. El reel es ~20 % más alto que antes (hasta 70 % de la altura de pantalla).
+- **Cierre de la ficha:** un solo botón X, dentro de la tarjeta del video y arriba a la derecha (también sobre las fotos), sin barra superior. Pausa y sonido quedan abajo, así que nada se tapa. El reel es ~20 % más alto que antes (hasta 70 % de la altura de pantalla).
 - **Tableta (768–959 px):** una columna con el reel centrado; las dos columnas solo desde 960 px. Con el teclado abierto el chat usa la altura visible real (`visualViewport`).
 
 ### Tipografía
